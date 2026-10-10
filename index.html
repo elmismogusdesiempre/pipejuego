@@ -8,7 +8,1780 @@
   :root {
     --verde-campo: #2e7d32;
     --marcador-bg: #1a1a2e;
+    --amarillo: #ffd600;<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>⚽ Arquero Matemático ⚽</title>
+<style>
+  :root {
+    --verde-campo: #2e7d32;
+    --marcador-bg: #1a1a2e;
     --amarillo: #ffd600;
+    --rojo: #e53935;
+    --sombra: 0 4px 12px rgba(0,0,0,0.4);
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  html, body { overflow: hidden; touch-action: manipulation; overscroll-behavior: none; }
+  body {
+    font-family: 'Segoe UI', 'Arial Black', sans-serif;
+    background: linear-gradient(180deg, #0d1b2a 0%, #1b263b 50%, #2e7d32 100%);
+    height: 100vh; height: 100dvh;
+    display: flex; justify-content: center; align-items: center;
+    user-select: none; -webkit-user-select: none;
+  }
+  #game-container { position: relative; width: 100vw; height: 100vh; height: 100dvh; max-width: 900px; max-height: 700px; background: var(--verde-campo); border-radius: 12px; overflow: hidden; box-shadow: var(--sombra); touch-action: manipulation; }
+  #game-container.playing { cursor: none; touch-action: none; }
+  .pitch { position: absolute; inset: 0; background: repeating-linear-gradient(0deg, #2e7d32 0px, #2e7d32 40px, #388e3c 40px, #388e3c 80px); pointer-events: none; }
+  .pitch::before { content: ''; position: absolute; top: 0; left: 50%; transform: translateX(-50%); width: 60%; height: 45%; border: 3px solid rgba(255,255,255,0.6); border-top: none; border-radius: 0 0 50% 50% / 0 0 30% 30%; }
+  .pitch::after { content: ''; position: absolute; top: 42%; left: 50%; transform: translate(-50%, -50%); width: 18%; height: 12%; border: 3px solid rgba(255,255,255,0.6); border-radius: 50%; }
+  .penalty-area { position: absolute; bottom: 4%; left: 50%; transform: translateX(-50%); width: 82%; height: 42%; border: 3px solid rgba(255,255,255,0.55); border-bottom: none; border-radius: 6px 6px 0 0; z-index: 4; pointer-events: none; }
+  .penalty-area::before { content: ''; position: absolute; top: -12%; left: 50%; transform: translateX(-50%); width: 40%; height: 24%; border: 3px solid rgba(255,255,255,0.55); border-bottom: none; border-radius: 50% 50% 0 0 / 100% 100% 0 0; }
+  .goal { position: absolute; bottom: 8%; left: 50%; transform: translateX(-50%); width: 40%; height: 22%; border: 5px solid #fff; border-bottom: none; border-radius: 8px 8px 0 0; z-index: 5; opacity: 0.6; pointer-events: none; }
+  .goal-line { position: absolute; bottom: 8%; left: 0; right: 0; height: 3px; background: rgba(255,255,255,0.4); z-index: 6; pointer-events: none; }
+  .scoreboard { position: absolute; top: 10px; left: 50%; transform: translateX(-50%); display: flex; gap: 6px; z-index: 20; flex-wrap: wrap; justify-content: center; max-width: 95%; pointer-events: none; }
+  .score-card { background: var(--marcador-bg); color: #fff; padding: 5px 10px; border-radius: 8px; font-size: 12px; font-weight: bold; display: flex; align-items: center; gap: 4px; box-shadow: var(--sombra); border: 2px solid #333; }
+  .score-card .label { font-size: 9px; opacity: 0.7; text-transform: uppercase; }
+  .score-card .value { font-size: 15px; color: var(--amarillo); }
+  .btn-exit-game { position: absolute; top: 10px; right: 10px; z-index: 30; background: rgba(229, 57, 53, 0.9); color: #fff; border: 2px solid #fff; border-radius: 10px; width: 42px; height: 42px; font-size: 18px; font-weight: bold; cursor: pointer; display: flex; align-items: center; justify-content: center; box-shadow: var(--sombra); padding: 0; line-height: 1; touch-action: manipulation; }
+  .btn-exit-game:active { transform: scale(0.95); }
+  .btn-exit-game.hidden { display: none !important; }
+  .equation-box { position: absolute; top: 62px; left: 50%; transform: translateX(-50%); background: rgba(0,0,0,0.75); color: #fff; padding: 12px 28px; border-radius: 16px; font-size: clamp(20px, 5vw, 40px); font-weight: 900; letter-spacing: 1px; z-index: 15; box-shadow: var(--sombra), inset 0 0 20px rgba(255,214,0,0.15); border: 3px solid var(--amarillo); text-shadow: 0 0 20px rgba(255,214,0,0.6); white-space: nowrap; pointer-events: none; display: flex; align-items: center; justify-content: center; gap: 6px; min-height: 60px; }
+  .frac { display: inline-flex; flex-direction: column; align-items: center; justify-content: center; vertical-align: middle; line-height: 1; margin: 0 3px; }
+  .frac .num { border-bottom: 2px solid currentColor; padding: 0 4px; min-width: 16px; text-align: center; }
+  .frac .den { padding: 0 4px; min-width: 16px; text-align: center; }
+  .equation-box .frac { font-size: 0.85em; }
+  .equation-box .frac .num { border-bottom-width: 3px; }
+  .ball { position: absolute; z-index: 10; display: flex; flex-direction: column; align-items: center; filter: drop-shadow(0 4px 6px rgba(0,0,0,0.5)); pointer-events: none; }
+  .ball .ball-emoji { font-size: 42px; line-height: 1; }
+  .ball .ball-value { background: var(--marcador-bg); color: #fff; font-size: 15px; font-weight: bold; padding: 2px 8px; border-radius: 10px; margin-top: -6px; border: 2px solid var(--amarillo); min-width: 34px; text-align: center; white-space: nowrap; display: flex; align-items: center; justify-content: center; gap: 1px; min-height: 26px; }
+  .ball .ball-value.negative { border-color: #ff7043; color: #ffab91; }
+  .ball .ball-value.fraction { border-color: #64b5f6; color: #90caf9; }
+  .ball .ball-value .frac { font-size: 0.95em; }
+  .ball .ball-value .frac .num { border-bottom-width: 2px; padding: 0 3px; min-width: 12px; }
+  .ball .ball-value .frac .den { padding: 0 3px; min-width: 12px; }
+  .goalkeeper { position: absolute; font-size: 50px; z-index: 12; filter: drop-shadow(0 0 10px rgba(255,255,255,0.6)); pointer-events: none; will-change: left, top; display: flex; align-items: center; justify-content: center; width: 60px; height: 60px; }
+  .goalkeeper .keeper-halo { position: absolute; inset: -8px; border-radius: 50%; border: 2px dashed rgba(255,214,0,0.5); animation: haloSpin 3s linear infinite; }
+  @keyframes haloSpin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+  .cursor-dot { position: absolute; width: 16px; height: 16px; border-radius: 50%; background: rgba(255,214,0,0.7); border: 2px solid #fff; transform: translate(-50%, -50%); pointer-events: none; z-index: 11; display: none; box-shadow: 0 0 10px rgba(255,214,0,0.8); }
+  .lives { position: absolute; top: 10px; left: 10px; display: flex; gap: 3px; font-size: 20px; z-index: 20; pointer-events: none; }
+  .overlay { position: absolute; inset: 0; background: rgba(0,0,0,0.88); display: flex; flex-direction: column; justify-content: flex-start; align-items: center; z-index: 100; padding: 20px; text-align: center; color: #fff; gap: 10px; overflow-y: auto; cursor: default; touch-action: pan-y; -webkit-overflow-scrolling: touch; overscroll-behavior: contain; }
+  .overlay.hidden { display: none; }
+  .overlay > *:first-child { margin-top: auto; }
+  .overlay > *:last-child { margin-bottom: auto; }
+  .title { font-size: clamp(26px, 6vw, 44px); font-weight: 900; color: var(--amarillo); text-shadow: 0 0 20px rgba(255,214,0,0.5); margin-bottom: 4px; }
+  .subtitle { font-size: 15px; opacity: 0.85; margin-bottom: 8px; }
+  .btn { background: var(--amarillo); color: #1a1a2e; border: none; padding: 11px 26px; border-radius: 10px; font-size: 15px; font-weight: 900; cursor: pointer; transition: transform 0.15s, background 0.15s; box-shadow: var(--sombra); text-transform: uppercase; letter-spacing: 1px; touch-action: manipulation; -webkit-tap-highlight-color: transparent; position: relative; z-index: 1; }
+  .btn:active { transform: scale(0.97); }
+  .btn.secondary { background: #455a64; color: #fff; }
+  .btn.toggle-off { background: #455a64 !important; color: #fff !important; }
+  .level-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 8px; width: 100%; max-width: 560px; margin: 8px 0; }
+  .level-btn { background: #263238; color: #fff; border: 2px solid #546e7a; padding: 10px; border-radius: 10px; cursor: pointer; font-weight: bold; transition: all 0.15s; display: flex; flex-direction: column; gap: 2px; font-size: 12px; touch-action: manipulation; -webkit-tap-highlight-color: transparent; }
+  .level-btn:active { transform: scale(0.97); }
+  .level-btn .lv-num { font-size: 16px; color: var(--amarillo); }
+  .level-btn .lv-desc { font-size: 10px; opacity: 0.8; }
+  .level-btn .lv-rarity { font-size: 9px; color: #90caf9; margin-top: 2px; font-style: italic; }
+  .settings-tabs { display: flex; gap: 4px; padding: 4px; background: rgba(0,0,0,0.5); border: 2px solid #333; border-radius: 12px; width: 100%; max-width: 560px; margin: 4px 0 8px; touch-action: manipulation; }
+  .settings-tab { flex: 1; background: transparent; color: #fff; border: none; padding: 9px 6px; border-radius: 8px; cursor: pointer; font-size: 12px; font-weight: bold; transition: all 0.15s; touch-action: manipulation; -webkit-tap-highlight-color: transparent; white-space: nowrap; }
+  .settings-tab.active { background: var(--amarillo); color: #1a1a2e; box-shadow: 0 2px 8px rgba(255,214,0,0.4); }
+  .settings-panel { display: none; width: 100%; max-width: 560px; flex-direction: column; align-items: center; gap: 8px; }
+  .settings-panel.active { display: flex; }
+  .settings-section { width: 100%; max-width: 560px; margin: 4px 0; }
+  .settings-label { font-size: 13px; font-weight: bold; color: var(--amarillo); margin-bottom: 6px; text-transform: uppercase; letter-spacing: 1px; }
+  .avatar-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(48px, 1fr)); gap: 6px; justify-content: center; }
+  .avatar-option { font-size: 28px; padding: 6px 4px; border-radius: 10px; cursor: pointer; border: 2px solid transparent; transition: all 0.15s; background: rgba(255,255,255,0.08); display: flex; align-items: center; justify-content: center; touch-action: manipulation; -webkit-tap-highlight-color: transparent; }
+  .avatar-option.selected { border-color: var(--amarillo); background: rgba(255,214,0,0.25); transform: scale(1.08); }
+  .speed-slider-wrap { display: flex; align-items: center; gap: 12px; width: 100%; max-width: 400px; justify-content: center; }
+  input[type="range"] { -webkit-appearance: none; appearance: none; width: 100%; height: 8px; border-radius: 4px; background: linear-gradient(90deg, #4caf50 0%, #ffd600 50%, #e53935 100%); outline: none; cursor: pointer; touch-action: manipulation; }
+  input[type="range"]::-webkit-slider-thumb { -webkit-appearance: none; appearance: none; width: 22px; height: 22px; border-radius: 50%; background: #fff; border: 3px solid var(--amarillo); cursor: pointer; box-shadow: 0 0 10px rgba(255,214,0,0.6); }
+  input[type="range"]::-moz-range-thumb { width: 22px; height: 22px; border-radius: 50%; background: #fff; border: 3px solid var(--amarillo); cursor: pointer; }
+  .speed-value { font-size: 16px; font-weight: bold; color: var(--amarillo); min-width: 55px; text-align: center; background: rgba(0,0,0,0.4); padding: 4px 10px; border-radius: 8px; }
+  .toggle-group { display: flex; gap: 6px; flex-wrap: wrap; justify-content: center; }
+  .toggle-btn { background: #455a64; color: #fff; border: 2px solid #546e7a; padding: 6px 14px; border-radius: 8px; font-size: 12px; font-weight: bold; cursor: pointer; transition: all 0.15s; touch-action: manipulation; -webkit-tap-highlight-color: transparent; }
+  .toggle-btn.active { background: var(--amarillo); color: #1a1a2e; border-color: var(--amarillo); }
+  .toggle-btn:active { transform: scale(0.96); }
+  .voice-select { background: #263238; color: #fff; border: 2px solid #546e7a; padding: 8px 12px; border-radius: 8px; font-size: 13px; font-weight: bold; max-width: 320px; width: 100%; cursor: pointer; outline: none; touch-action: manipulation; }
+  .voice-hint { font-size: 11px; opacity: 0.7; margin-top: 6px; color: #90caf9; }
+  .voice-status { font-size: 11px; color: #4caf50; margin-top: 4px; min-height: 14px; font-style: italic; }
+
+  /* ============================================================
+     TARJETA DE REPASO ACADÉMICO - FONDO BLANCO DE ALTO CONTRASTE
+     ============================================================ */
+  .academic-card {
+    width: 100%;
+    max-width: 460px;
+    background: #ffffff;
+    border: 4px solid #ffd600;
+    border-radius: 16px;
+    padding: 16px 20px;
+    margin: 8px 0;
+    text-align: left;
+    color: #1a1a2e;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.55), 0 0 0 1px rgba(0,0,0,0.08);
+    animation: academicPop 0.5s ease-out;
+  }
+  @keyframes academicPop { 0% { transform: scale(0.85); opacity: 0; } 100% { transform: scale(1); opacity: 1; } }
+  .academic-card.hidden { display: none; }
+  .academic-title {
+    font-size: 15px; font-weight: 900; color: #0d1b2a;
+    text-transform: uppercase; letter-spacing: 1.5px; margin-bottom: 4px;
+  }
+  .academic-subtitle {
+    font-size: 12px; color: #555; margin-bottom: 12px; font-style: italic;
+  }
+  .academic-equation {
+    background: #f5f5f5;
+    border: 3px solid #0d1b2a;
+    border-radius: 10px;
+    padding: 12px 16px;
+    font-size: clamp(22px, 4.5vw, 32px);
+    font-weight: 900;
+    text-align: center;
+    color: #0d1b2a;
+    margin-bottom: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    min-height: 52px;
+  }
+  .academic-equation .frac { font-size: 0.8em; }
+  .academic-equation .frac .num { border-bottom-width: 3px; }
+  .academic-answers { display: flex; gap: 10px; margin-bottom: 12px; flex-wrap: wrap; }
+  .academic-row {
+    flex: 1 1 140px;
+    border-radius: 8px;
+    padding: 8px 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    border-left: 5px solid;
+  }
+  .academic-row.correct { background: #e8f5e9; border-left-color: #2e7d32; }
+  .academic-row.wrong { background: #ffebee; border-left-color: #c62828; }
+  .academic-row-label {
+    font-size: 10px; text-transform: uppercase; letter-spacing: 1px; font-weight: 900;
+  }
+  .academic-row.correct .academic-row-label { color: #1b5e20; }
+  .academic-row.wrong .academic-row-label { color: #b71c1c; }
+  .academic-row-value {
+    font-size: clamp(18px, 3.5vw, 24px); font-weight: 900;
+    display: flex; align-items: center; gap: 4px;
+  }
+  .academic-row.correct .academic-row-value { color: #1b5e20; }
+  .academic-row.wrong .academic-row-value { color: #b71c1c; }
+  .academic-row-value .frac { font-size: 0.85em; }
+  .academic-explanation {
+    background: #fff9c4;
+    border-left: 5px solid #f9a825;
+    border-radius: 8px;
+    padding: 10px 12px;
+  }
+  .expl-label {
+    font-size: 11px; font-weight: 900; color: #e65100;
+    text-transform: uppercase; letter-spacing: 1px; margin-bottom: 6px;
+  }
+  .expl-text { font-size: 13px; line-height: 1.55; color: #212121; font-weight: 500; }
+  .expl-text > div { margin-bottom: 6px; }
+  .expl-text > div:last-child { margin-bottom: 0; }
+  .expl-text b { color: #0d1b2a; font-weight: 900; }
+  .expl-text .tip { color: #0d47a1; font-style: italic; font-weight: 600; }
+  .expl-text .verify { color: #1b5e20; font-weight: 800; }
+  .expl-text .step { color: #bf360c; font-weight: 800; }
+
+  .feedback { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); font-size: clamp(50px, 12vw, 90px); font-weight: 900; z-index: 50; pointer-events: none; animation: feedbackPop 1s ease-out forwards; text-shadow: 0 0 30px rgba(0,0,0,0.8), 0 0 10px currentColor; white-space: nowrap; }
+  @keyframes feedbackPop { 0% { transform: translate(-50%, -50%) scale(0.3); opacity: 0; } 25% { transform: translate(-50%, -50%) scale(1.3); opacity: 1; } 70% { transform: translate(-50%, -50%) scale(1); opacity: 1; } 100% { transform: translate(-50%, -120%) scale(1); opacity: 0; } }
+  .correct-answer-big { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); font-size: clamp(50px, 13vw, 100px); font-weight: 900; color: #fff; z-index: 45; pointer-events: none; text-shadow: 0 0 30px var(--amarillo), 0 0 60px var(--rojo); background: rgba(229,57,53,0.85); padding: 20px 50px; border-radius: 20px; border: 4px solid var(--amarillo); animation: correctPop 1.8s ease-out forwards; display: flex; align-items: center; justify-content: center; gap: 6px; }
+  .correct-answer-big .frac { font-size: 0.85em; }
+  @keyframes correctPop { 0% { transform: translate(-50%, -50%) scale(0.2); opacity: 0; } 20% { transform: translate(-50%, -50%) scale(1.1); opacity: 1; } 80% { transform: translate(-50%, -50%) scale(1); opacity: 1; } 100% { transform: translate(-50%, -50%) scale(1); opacity: 0; } }
+  .ticker { position: absolute; bottom: 0; left: 0; right: 0; background: var(--marcador-bg); color: #fff; padding: 5px 10px; font-size: 11px; display: flex; align-items: center; gap: 6px; z-index: 20; border-top: 2px solid var(--amarillo); overflow: hidden; white-space: nowrap; pointer-events: none; }
+  .ticker .live { background: var(--rojo); padding: 2px 6px; border-radius: 4px; font-weight: bold; animation: blink 1.2s infinite; flex-shrink: 0; font-size: 10px; }
+  @keyframes blink { 0%,100% { opacity: 1; } 50% { opacity: 0.4; } }
+  .stats-panel { position: absolute; top: 10px; right: 60px; display: flex; flex-direction: column; gap: 4px; z-index: 20; pointer-events: none; }
+  .stat-card { background: var(--marcador-bg); color: #fff; padding: 3px 8px; border-radius: 8px; font-size: 11px; display: flex; justify-content: space-between; gap: 8px; min-width: 100px; border: 2px solid #333; }
+  .stat-card .val { color: var(--amarillo); font-weight: bold; }
+  .hidden { display: none !important; }
+  .controls-hint { position: absolute; bottom: 30px; left: 50%; transform: translateX(-50%); background: rgba(0,0,0,0.6); color: #fff; font-size: 11px; padding: 4px 12px; border-radius: 12px; z-index: 18; pointer-events: none; opacity: 0; transition: opacity 0.5s; }
+  .controls-hint.show { opacity: 1; }
+  .confirm-modal { position: absolute; inset: 0; background: rgba(0,0,0,0.85); display: flex; justify-content: center; align-items: center; z-index: 200; padding: 20px; }
+  .confirm-modal.hidden { display: none; }
+  .confirm-box { background: var(--marcador-bg); border: 3px solid var(--amarillo); border-radius: 16px; padding: 24px 28px; max-width: 360px; width: 100%; text-align: center; color: #fff; box-shadow: var(--sombra); }
+  .confirm-box .confirm-icon { font-size: 48px; margin-bottom: 8px; }
+  .confirm-box .confirm-title { font-size: 20px; font-weight: 900; color: var(--amarillo); margin-bottom: 8px; }
+  .confirm-box .confirm-text { font-size: 14px; opacity: 0.85; margin-bottom: 16px; }
+  .confirm-box .confirm-buttons { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; }
+  .confirm-box .btn { padding: 10px 20px; font-size: 13px; }
+  @media (max-width: 600px) {
+    .ball .ball-emoji { font-size: 34px; }
+    .ball .ball-value { font-size: 13px; min-width: 28px; padding: 1px 6px; }
+    .goalkeeper { font-size: 42px; width: 50px; height: 50px; }
+    .equation-box { padding: 8px 18px; top: 56px; font-size: clamp(18px, 5vw, 28px); }
+    .score-card { padding: 3px 7px; font-size: 10px; }
+    .score-card .value { font-size: 12px; }
+    .avatar-option { font-size: 22px; }
+    .btn-exit-game { width: 36px; height: 36px; font-size: 15px; }
+    .stats-panel { right: 52px; }
+    .btn { padding: 12px 28px; font-size: 16px; }
+    .academic-card { padding: 12px 14px; }
+    .academic-equation { padding: 10px 12px; }
+    .settings-tab { font-size: 11px; padding: 8px 4px; }
+  }
+</style>
+</head>
+<body>
+<div id="game-container">
+  <div class="pitch"></div>
+  <div class="penalty-area"></div>
+  <div class="goal"></div>
+  <div class="goal-line"></div>
+
+  <div class="scoreboard">
+    <div class="score-card"><span class="label">Nivel</span><span class="value" id="ui-level">1</span></div>
+    <div class="score-card"><span class="label">Goles</span><span class="value" id="ui-goals">0</span></div>
+    <div class="score-card"><span class="label">Atajadas</span><span class="value" id="ui-saves">0</span></div>
+    <div class="score-card"><span class="label">Racha</span><span class="value" id="ui-streak">0</span></div>
+  </div>
+
+  <div class="stats-panel">
+    <div class="stat-card"><span>🛡️ Vidas</span><span class="val" id="ui-lives">❤️❤️❤️</span></div>
+  </div>
+
+  <button class="btn-exit-game hidden" id="btn-exit-game" title="Salir al menú">🏠</button>
+
+  <div class="lives" id="ui-lives-icons"></div>
+  <div class="equation-box" id="ui-equation">2 + 3</div>
+
+  <div class="goalkeeper" id="ui-keeper">
+    <span class="keeper-halo"></span>
+    <span id="ui-keeper-emoji">🧤</span>
+  </div>
+
+  <div class="cursor-dot" id="cursor-dot"></div>
+  <div class="controls-hint" id="controls-hint">Mueve al arquero por el área</div>
+
+  <div class="ticker">
+    <span class="live">🔴 EN VIVO</span>
+    <span id="ui-ticker">Bienvenidos al Estadio Matemático.</span>
+  </div>
+
+  <div class="overlay" id="overlay-menu">
+    <div class="title">⚽ ARQUERO MATEMÁTICO ⚽</div>
+    <div class="subtitle">Ataja con el arquero el balón con la respuesta correcta</div>
+    <div class="subtitle" style="font-size:13px;opacity:0.7;">🖱️ Mouse · ⌨️ Flechas/WASD · 📱 Touch</div>
+    <button class="btn" id="btn-tournament">🏆 MODO TORNEO</button>
+    <button class="btn secondary" id="btn-levels">🎯 ELEGIR NIVEL</button>
+    <button class="btn secondary" id="btn-settings">⚙️ AJUSTES</button>
+  </div>
+
+  <div class="overlay hidden" id="overlay-levels">
+    <div class="title">🎯 ELIGE NIVEL</div>
+    <div class="level-grid" id="level-grid"></div>
+    <button class="btn secondary" id="btn-back-levels">⬅️ VOLVER</button>
+  </div>
+
+  <div class="overlay hidden" id="overlay-settings">
+    <div class="title">⚙️ AJUSTES</div>
+    <div class="settings-tabs" id="settings-tabs">
+      <button class="settings-tab active" data-tab="tab-numbers">🔢 Números</button>
+      <button class="settings-tab" data-tab="tab-avatars">🎭 Avatares</button>
+      <button class="settings-tab" data-tab="tab-audio">🎙️ Audio</button>
+    </div>
+
+    <div class="settings-panel active" id="tab-numbers">
+      <div class="settings-section">
+        <div class="settings-label">⚡ Velocidad general de los balones</div>
+        <div class="speed-slider-wrap">
+          <span style="font-size:18px;">🐢</span>
+          <input type="range" id="speed-slider" min="0.3" max="2.5" step="0.1" value="1">
+          <span style="font-size:18px;">🐇</span>
+          <span class="speed-value" id="speed-value">1.0x</span>
+        </div>
+      </div>
+      <div class="settings-section" style="margin-top:8px;">
+        <div class="settings-label">🔢 Tipos de números</div>
+        <div class="toggle-group" id="number-type-toggles">
+          <button class="toggle-btn active" data-type="natural">Naturales (1,2,3)</button>
+          <button class="toggle-btn active" data-type="negative">Negativos (−5,−3)</button>
+          <button class="toggle-btn active" data-type="fraction">Fraccionarios (½, ¾)</button>
+        </div>
+        <div class="voice-hint">La frecuencia de negativos y fracciones aumenta con el nivel 🎲</div>
+      </div>
+    </div>
+
+    <div class="settings-panel" id="tab-avatars">
+      <div class="settings-section">
+        <div class="settings-label">🧤 Avatar del Arquero (Jugador)</div>
+        <div class="avatar-grid" id="keeper-avatars"></div>
+      </div>
+      <div class="settings-section" style="margin-top:8px;">
+        <div class="settings-label">⚽ Bandera/Emoji del Lanzador</div>
+        <div class="avatar-grid" id="shooter-avatars"></div>
+      </div>
+    </div>
+
+    <div class="settings-panel" id="tab-audio">
+      <div class="settings-section">
+        <div class="settings-label">🔊 Sonido (beeps)</div>
+        <button class="btn" id="btn-sound-toggle" style="padding:6px 20px;font-size:13px;">ON</button>
+      </div>
+      <div class="settings-section" style="margin-top:8px;">
+        <div class="settings-label">🎙️ Narración por voz</div>
+        <button class="btn" id="btn-voice-toggle" style="padding:6px 20px;font-size:13px;">ON</button>
+        <div id="voice-selector-wrap" style="margin-top:8px;">
+          <select class="voice-select" id="voice-select">
+            <option value="">Cargando voces...</option>
+          </select>
+          <div class="voice-hint" id="voice-hint">Selecciona la voz del relator</div>
+          <div class="voice-status" id="voice-status"></div>
+        </div>
+        <button class="btn secondary" id="btn-voice-test" style="margin-top:8px;padding:6px 20px;font-size:12px;">🔊 Probar voz</button>
+      </div>
+    </div>
+
+    <button class="btn secondary" id="btn-back-settings" style="margin-top:8px;">⬅️ VOLVER</button>
+  </div>
+
+  <div class="overlay hidden" id="overlay-gameover">
+    <div class="title" id="go-title">¡GOL EN CONTRA!</div>
+    <div class="subtitle" id="go-subtitle"></div>
+    <div style="display:flex;gap:10px;flex-wrap:wrap;justify-content:center;margin:6px 0;">
+      <div class="score-card" style="font-size:14px;padding:8px 16px;"><span class="label">Goles</span><span class="value" id="go-goals">0</span></div>
+      <div class="score-card" style="font-size:14px;padding:8px 16px;"><span class="label">Atajadas</span><span class="value" id="go-saves">0</span></div>
+      <div class="score-card" style="font-size:14px;padding:8px 16px;"><span class="label">Racha</span><span class="value" id="go-streak">0</span></div>
+    </div>
+    <div class="academic-card hidden" data-academic="go">
+      <div class="academic-title">📚 Repaso del partido</div>
+      <div class="academic-subtitle">Repasemos una que se te complicó:</div>
+      <div class="academic-equation" data-role="equation"></div>
+      <div class="academic-answers">
+        <div class="academic-row correct">
+          <span class="academic-row-label">✅ Correcto</span>
+          <span class="academic-row-value" data-role="correct"></span>
+        </div>
+        <div class="academic-row wrong">
+          <span class="academic-row-label">❌ Tu respuesta</span>
+          <span class="academic-row-value" data-role="wrong"></span>
+        </div>
+      </div>
+      <div class="academic-explanation">
+        <div class="expl-label">💡 Explicación</div>
+        <div class="expl-text" data-role="explanation"></div>
+      </div>
+    </div>
+    <button class="btn" id="btn-retry">🔄 REINTENTAR</button>
+    <button class="btn secondary" id="btn-menu-go">🏠 MENÚ</button>
+  </div>
+
+  <div class="overlay hidden" id="overlay-levelup">
+    <div class="title" id="lu-title">¡NIVEL SUPERADO!</div>
+    <div class="subtitle" id="lu-subtitle"></div>
+    <div class="academic-card hidden" data-academic="lu">
+      <div class="academic-title">📚 Repaso del nivel</div>
+      <div class="academic-subtitle">Repasemos una que se te complicó:</div>
+      <div class="academic-equation" data-role="equation"></div>
+      <div class="academic-answers">
+        <div class="academic-row correct">
+          <span class="academic-row-label">✅ Correcto</span>
+          <span class="academic-row-value" data-role="correct"></span>
+        </div>
+        <div class="academic-row wrong">
+          <span class="academic-row-label">❌ Tu respuesta</span>
+          <span class="academic-row-value" data-role="wrong"></span>
+        </div>
+      </div>
+      <div class="academic-explanation">
+        <div class="expl-label">💡 Explicación</div>
+        <div class="expl-text" data-role="explanation"></div>
+      </div>
+    </div>
+    <button class="btn" id="btn-next-level">➡️ SIGUIENTE NIVEL</button>
+    <button class="btn secondary" id="btn-menu-lu">🏠 MENÚ</button>
+  </div>
+
+  <div class="feedback hidden" id="ui-feedback"></div>
+
+  <div class="confirm-modal hidden" id="confirm-exit-modal">
+    <div class="confirm-box">
+      <div class="confirm-icon">🏠</div>
+      <div class="confirm-title">¿Salir al menú?</div>
+      <div class="confirm-text">Perderás el progreso de esta partida.</div>
+      <div class="confirm-buttons">
+        <button class="btn secondary" id="btn-confirm-cancel">CANCELAR</button>
+        <button class="btn" id="btn-confirm-exit">SALIR</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ============================================================
+   CONFIGURACIÓN
+   ============================================================ */
+const KEEPER_AVATARS = ['🧤','🤲','🙌','👐','🤜','✋','🖐️','👊','🦸','🧍','🏃','🦁','🐯','🐻','🦅','⚽','🥅','🧢','🎽','👤'];
+const SHOOTER_AVATARS = ['⚽','🔴','🟠','🟡','🟢','🔵','🟣','⚪','⚫','🇦🇷','🇧🇷','🇪🇸','🇲🇽','🇨🇴','🇺🇾','🇨🇱','🇵🇪','🇫🇷','🇩🇪','🇮🇹','🇬🇧','🇺🇸','🇯🇵','🇰🇷','🇳🇬','🇿🇦','🇦🇺','🇨🇦','🇵🇹','🏐','🏀'];
+
+const LEVELS = [
+  { id:1, name:'Principiante', desc:'Solo sumas y restas', ops:['+','-'], maxNum:10, speed:0.9, balls:3, target:5, lives:3, rarity:1 },
+  { id:2, name:'Fácil', desc:'Sumas y restas', ops:['+','-'], maxNum:20, speed:1.1, balls:3, target:6, lives:3, rarity:2 },
+  { id:3, name:'Intermedio', desc:'+ Multiplicación', ops:['+','-','×'], maxNum:12, speed:1.3, balls:4, target:7, lives:3, rarity:3 },
+  { id:4, name:'Avanzado', desc:'+ División', ops:['+','-','×','÷'], maxNum:15, speed:1.5, balls:4, target:8, lives:3, rarity:4 },
+  { id:5, name:'Experto', desc:'+ Raíz cuadrada', ops:['+','-','×','÷','√'], maxNum:20, speed:1.7, balls:4, target:9, lives:3, rarity:5 },
+  { id:6, name:'Maestro', desc:'+ Logaritmo', ops:['+','-','×','÷','√','log'], maxNum:25, speed:1.9, balls:5, target:10, lives:3, rarity:6 },
+  { id:7, name:'Leyenda', desc:'Todas las operaciones', ops:['+','-','×','÷','√','log'], maxNum:30, speed:2.2, balls:5, target:12, lives:2, rarity:7 },
+  { id:8, name:'Imposible', desc:'Velocidad máxima', ops:['+','-','×','÷','√','log'], maxNum:40, speed:2.6, balls:6, target:15, lives:2, rarity:8 },
+];
+
+function getRarityChance(rarity) {
+  const minChance = 0.05, maxChance = 0.65;
+  const t = (rarity - 1) / 7;
+  return minChance + t * (maxChance - minChance);
+}
+function getRarityLabel(rarity) {
+  const pct = Math.round(getRarityChance(rarity) * 100);
+  return `🎲 especiales: ${pct}%`;
+}
+
+const state = {
+  mode: 'menu', levelIndex: 0, goals: 0, saves: 0, streak: 0, bestStreak: 0,
+  lives: 3, maxLives: 3, currentEquation: null, correctAnswer: null,
+  balls: [], animationId: null, lastTime: 0,
+  keeperX: 0, keeperY: 0, keeperW: 60, keeperH: 60, keeperSpeedPx: 340,
+  keys: { left: false, right: false, up: false, down: false },
+  pointerActive: false, pointerX: 0, pointerY: 0,
+  soundOn: true,
+  voiceEnabled: true,  // ✅ Activada por defecto
+  voices: [], selectedVoiceName: null, hasSpokenOnce: false,
+  keeperAvatar: '🧤', shooterAvatar: '⚽', isTournament: false,
+  audioCtx: null, active: false, roundLocked: false,
+  globalSpeedMultiplier: 1.0,
+  numberTypes: { natural: true, negative: true, fraction: true },
+  area: { left: 0, right: 0, top: 0, bottom: 0 },
+  goalLineY: 0, goalRect: { left: 0, right: 0, top: 0, bottom: 0 },
+  gamePaused: false, narrationTimer: null, pendingSpeakTimer: null,
+  mistakes: [],
+};
+
+/* ============================================================
+   FRACCIONES - Utilidades
+   ============================================================ */
+const FRACTION_MAX_DEN = 24;
+
+function gcd(a, b) { a = Math.abs(a); b = Math.abs(b); while (b) { const t = b; b = a % b; a = t; } return a || 1; }
+function lcm(a, b) { return (a * b) / gcd(a, b); }
+function simplify(num, den) {
+  if (den === 0) den = 1;
+  if (den < 0) { num = -num; den = -den; }
+  const g = gcd(num, den);
+  return { num: num/g, den: den/g };
+}
+function fracHTML(num, den) {
+  const s = simplify(num, den);
+  return `<span class="frac"><span class="num">${s.num}</span><span class="den">${s.den}</span></span>`;
+}
+function decimalToFraction(dec, maxDen = FRACTION_MAX_DEN) {
+  if (Number.isInteger(dec)) return { num: dec, den: 1, value: dec };
+  const sign = dec < 0 ? -1 : 1;
+  const absDec = Math.abs(dec);
+  let bestNum = 1, bestDen = 1, bestErr = Infinity;
+  for (let den = 1; den <= maxDen; den++) {
+    const num = Math.round(absDec * den);
+    const err = Math.abs(absDec - num/den);
+    if (err < bestErr - 1e-9) { bestErr = err; bestNum = num; bestDen = den; }
+  }
+  const g = gcd(bestNum, bestDen);
+  return { num: sign * bestNum/g, den: bestDen/g, value: dec };
+}
+function numHTML(value, opts = {}) {
+  const { parentheses = false, maxDen = FRACTION_MAX_DEN } = opts;
+  if (Number.isInteger(value)) {
+    if (value < 0 && parentheses) return `(−${Math.abs(value)})`;
+    return String(value);
+  }
+  const f = decimalToFraction(value, maxDen);
+  if (f.den === 1) {
+    if (f.num < 0 && parentheses) return `(−${Math.abs(f.num)})`;
+    return String(f.num);
+  }
+  const absNum = Math.abs(f.num);
+  const fracPart = fracHTML(absNum, f.den);
+  if (f.num < 0) return parentheses ? `(−${fracPart})` : `−${fracPart}`;
+  return fracPart;
+}
+function numText(value) {
+  if (Number.isInteger(value)) return String(value);
+  const f = decimalToFraction(value);
+  if (f.den === 1) return String(f.num);
+  return `${f.num}/${f.den}`;
+}
+function explainNum(v) {
+  if (Number.isInteger(v)) return v < 0 ? `(−${Math.abs(v)})` : String(v);
+  return numText(v);
+}
+function approxEqual(a, b) { return Math.abs(a - b) < 1e-6; }
+function sameFraction(a, b) {
+  if (approxEqual(a, b)) return true;
+  const fa = decimalToFraction(a);
+  const fb = decimalToFraction(b);
+  return fa.num === fb.num && fa.den === fb.den;
+}
+const randInt = (a,b) => Math.floor(Math.random()*(b-a+1))+a;
+const randChoice = arr => arr[Math.floor(Math.random()*arr.length)];
+
+/* ============================================================
+   AUDIO (beeps)
+   ============================================================ */
+function initAudio() {
+  if (!state.audioCtx) { try { state.audioCtx = new (window.AudioContext || window.webkitAudioContext)(); } catch(e) {} }
+  if (state.audioCtx && state.audioCtx.state === 'suspended') state.audioCtx.resume().catch(()=>{});
+}
+function playTone(freq, dur, type='sine', vol=0.15) {
+  if (!state.soundOn || !state.audioCtx) return;
+  try {
+    const osc = state.audioCtx.createOscillator();
+    const gain = state.audioCtx.createGain();
+    osc.type = type;
+    osc.frequency.setValueAtTime(freq, state.audioCtx.currentTime);
+    gain.gain.setValueAtTime(vol, state.audioCtx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.001, state.audioCtx.currentTime + dur);
+    osc.connect(gain); gain.connect(state.audioCtx.destination);
+    osc.start(); osc.stop(state.audioCtx.currentTime + dur);
+  } catch(e) {}
+}
+function soundSave() { playTone(880,0.1,'square',0.12); setTimeout(()=>playTone(1320,0.15,'square',0.12),70); }
+function soundGoal() { playTone(220,0.35,'sawtooth',0.16); setTimeout(()=>playTone(160,0.4,'sawtooth',0.13),200); }
+function soundWhistle() { playTone(1200,0.12,'sine',0.1); setTimeout(()=>playTone(1450,0.18,'sine',0.1),110); }
+function soundClick() { playTone(600,0.06,'square',0.08); }
+function soundLevelUp() { [523,659,784,1047].forEach((f,i)=>setTimeout(()=>playTone(f,0.2,'sine',0.12),i*100)); }
+function soundCrowd() {
+  if (!state.soundOn || !state.audioCtx) return;
+  try {
+    const sz = state.audioCtx.sampleRate * 0.5;
+    const buf = state.audioCtx.createBuffer(1, sz, state.audioCtx.sampleRate);
+    const d = buf.getChannelData(0);
+    for (let i=0;i<sz;i++) d[i] = (Math.random()*2-1)*0.05*Math.exp(-i/sz*3);
+    const src = state.audioCtx.createBufferSource();
+    const g = state.audioCtx.createGain();
+    src.buffer = buf;
+    g.gain.setValueAtTime(0.3, state.audioCtx.currentTime);
+    g.gain.exponentialRampToValueAtTime(0.001, state.audioCtx.currentTime+0.5);
+    src.connect(g); g.connect(state.audioCtx.destination); src.start();
+  } catch(e) {}
+}
+
+/* ============================================================
+   NARRACIÓN
+   ============================================================ */
+const PHRASES = {
+  levelStart: ['¡Comienza el partido!', '¡Rueda el balón!', '¡Arranca el juego!', '¡Todo listo en el estadio!'],
+  preShoot: ['Se prepara...', 'Toma distancia...', 'Va a rematar...', 'El delantero se acomoda...', 'Carga la pierna...'],
+  shoot: ['¡Y patea!', '¡Disparo!', '¡Va el centro!', '¡Remata!', '¡Al arco!'],
+  save: ['¡Atajada espectacular!', '¡Qué manos!', '¡La sacó!', '¡Gran atajada!', '¡Manos de oro!', '¡Qué reflejos!'],
+  saveStreak3: ['¡Tres al hilo!', '¡Está imparable!', '¡Racha increíble!'],
+  saveStreak5: ['¡Cinco seguidas!', '¡Es una muralla!', '¡Nadie lo puede vencer!'],
+  goal: ['¡Gol del visitante!', '¡Se le escapó!', '¡Adentro!', '¡Gol en contra!', '¡Se le coló!'],
+  wrongBall: ['¡No era ese!', '¡Error!', '¡Mal calculado!', '¡Por poco!'],
+  levelComplete: ['¡Termina el primer tiempo!', '¡Nivel superado!', '¡Buen trabajo, arquero!', '¡Se queda con el arco en cero!'],
+  gameOver: ['¡Final del partido!', '¡Se acabó!', '¡Terminó el encuentro!'],
+  tournamentWin: ['¡Campeón! ¡Campeón!', '¡Levanta la copa!', '¡Es una leyenda!'],
+};
+function pickRandom(arr) { return arr[Math.floor(Math.random() * arr.length)]; }
+
+function initVoices() {
+  if (!('speechSynthesis' in window)) {
+    const hint = document.getElementById('voice-hint');
+    if (hint) hint.textContent = '⚠️ Tu navegador no soporta narración por voz';
+    const btn = document.getElementById('btn-voice-toggle');
+    if (btn) btn.disabled = true;
+    return;
+  }
+  const loadVoices = () => {
+    const all = speechSynthesis.getVoices();
+    const spanish = all.filter(v => v.lang.toLowerCase().startsWith('es'));
+    state.voices = spanish.length > 0 ? spanish : all;
+    // ✅ Solo auto-seleccionar si aún no hay ninguna voz elegida
+    if (!state.selectedVoiceName && state.voices.length > 0) {
+      state.selectedVoiceName = state.voices[0].name;
+    }
+    // ✅ Si la voz seleccionada ya no existe, reasignar
+    if (state.selectedVoiceName && !state.voices.find(v => v.name === state.selectedVoiceName)) {
+      state.selectedVoiceName = state.voices.length > 0 ? state.voices[0].name : null;
+    }
+    updateVoiceSelector();
+  };
+  loadVoices();
+  if (speechSynthesis.onvoiceschanged !== undefined) speechSynthesis.onvoiceschanged = loadVoices;
+  setTimeout(loadVoices, 200); setTimeout(loadVoices, 800); setTimeout(loadVoices, 2000);
+}
+function updateVoiceSelector() {
+  const sel = document.getElementById('voice-select');
+  const hint = document.getElementById('voice-hint');
+  if (!sel) return;
+  sel.innerHTML = '';
+  if (state.voices.length === 0) { sel.innerHTML = '<option value="">No hay voces disponibles</option>'; if (hint) hint.textContent = '⚠️ No se detectaron voces'; return; }
+  state.voices.forEach(v => {
+    const opt = document.createElement('option');
+    opt.value = v.name; opt.textContent = `${v.name} (${v.lang})`;
+    if (v.name === state.selectedVoiceName) opt.selected = true;
+    sel.appendChild(opt);
+  });
+  const spanishCount = state.voices.filter(v => v.lang.toLowerCase().startsWith('es')).length;
+  if (hint) hint.textContent = spanishCount > 0 ? `✅ ${spanishCount} voz(ces) en español` : `ℹ️ ${state.voices.length} voz(ces) disponibles (sin español)`;
+}
+function updateVoiceStatus(msg) { const el = document.getElementById('voice-status'); if (el) el.textContent = msg || ''; }
+
+/* ✅ speakDirect reescrito con manejo robusto de errores de síntesis */
+function speakDirect(text, opts = {}) {
+  if (!('speechSynthesis' in window)) return;
+  if (!text || !text.trim()) return;
+  if (!state.voiceEnabled && !opts.force) return;
+  if (state.pendingSpeakTimer) { clearTimeout(state.pendingSpeakTimer); state.pendingSpeakTimer = null; }
+
+  const doSpeak = () => {
+    try {
+      try { speechSynthesis.resume(); } catch(e) {}
+      const u = new SpeechSynthesisUtterance(text);
+      // ✅ Setear lang solo si hay voz o si queremos el default
+      u.rate = opts.rate || 1.05;
+      u.pitch = opts.pitch || 1.15;
+      u.volume = opts.volume !== undefined ? opts.volume : 1.0;
+
+      // ✅ Asignar voz solo si tenemos una válida
+      let voiceAssigned = false;
+      if (state.selectedVoiceName && state.voices.length > 0) {
+        const v = state.voices.find(v => v.name === state.selectedVoiceName);
+        if (v) { u.voice = v; u.lang = v.lang || 'es-ES'; voiceAssigned = true; }
+      }
+      if (!voiceAssigned) {
+        // Si no hay voz seleccionable, dejar que el browser use su default
+        u.lang = 'es-ES';
+      }
+
+      u.onstart = () => { updateVoiceStatus(`🎙️ Hablando: "${text.slice(0, 30)}..."`); };
+      u.onend = () => { updateVoiceStatus(''); };
+      u.onerror = (e) => {
+        const err = (e && e.error) || '';
+        // ✅ Ignorar errores normales de cancelación
+        if (err === 'canceled' || err === 'interrupted') return;
+        // ✅ Si la voz específica falla, reintentar con la voz por defecto
+        if (err === 'voice-unavailable' || err === 'language-unavailable') {
+          updateVoiceStatus('🎙️ Usando voz por defecto');
+          try {
+            const u2 = new SpeechSynthesisUtterance(text);
+            u2.rate = opts.rate || 1.05;
+            u2.pitch = opts.pitch || 1.15;
+            u2.volume = opts.volume !== undefined ? opts.volume : 1.0;
+            u2.lang = 'es-ES';
+            speechSynthesis.speak(u2);
+          } catch(_) {}
+          return;
+        }
+        // Mostrar otros errores de forma menos intrusiva
+        updateVoiceStatus(`⚠️ ${err || 'error'}`);
+      };
+
+      speechSynthesis.speak(u);
+      state.hasSpokenOnce = true;
+    } catch(e) {
+      updateVoiceStatus(`⚠️ ${e.message || 'error'}`);
+    }
+  };
+
+  if (!state.hasSpokenOnce) { doSpeak(); return; }
+  if (!opts.noCancel) { try { if (speechSynthesis.speaking || speechSynthesis.pending) speechSynthesis.cancel(); } catch(e) {} }
+  const delay = opts.noCancel ? 0 : 120;
+  if (delay === 0) { doSpeak(); }
+  else { state.pendingSpeakTimer = setTimeout(() => { doSpeak(); state.pendingSpeakTimer = null; }, delay); }
+}
+function cancelSpeech() {
+  if (!('speechSynthesis' in window)) return;
+  try { speechSynthesis.cancel(); } catch(e) {}
+  if (state.narrationTimer) { clearTimeout(state.narrationTimer); state.narrationTimer = null; }
+  if (state.pendingSpeakTimer) { clearTimeout(state.pendingSpeakTimer); state.pendingSpeakTimer = null; }
+  updateVoiceStatus('');
+}
+function narrateCategory(category, opts = {}) {
+  if (!state.voiceEnabled) return;
+  const arr = PHRASES[category]; if (!arr) return;
+  speakDirect(pickRandom(arr), opts);
+}
+function narrateShot() {
+  if (!state.voiceEnabled) return;
+  speakDirect(pickRandom(PHRASES.preShoot), { rate: 1.0, pitch: 1.05 });
+  state.narrationTimer = setTimeout(() => {
+    if (state.mode !== 'playing' || !state.active) return;
+    speakDirect(pickRandom(PHRASES.shoot), { rate: 1.3, pitch: 1.4, noCancel: true });
+    state.narrationTimer = null;
+  }, 1400);
+}
+function narrateSave() {
+  if (!state.voiceEnabled) return;
+  if (state.streak >= 5) speakDirect(pickRandom(PHRASES.saveStreak5), { rate: 1.25, pitch: 1.4 });
+  else if (state.streak >= 3) speakDirect(pickRandom(PHRASES.saveStreak3), { rate: 1.2, pitch: 1.35 });
+  else speakDirect(pickRandom(PHRASES.save), { rate: 1.15, pitch: 1.3 });
+}
+
+/* ============================================================
+   GENERACIÓN CON RAREZA
+   ============================================================ */
+function pickNumberType(level) {
+  const types = [];
+  if (state.numberTypes.natural) types.push('natural');
+  if (state.numberTypes.negative) types.push('negative');
+  if (state.numberTypes.fraction) types.push('fraction');
+  if (types.length === 0) return 'natural';
+  if (types.length === 1) return types[0];
+  const specialChance = getRarityChance(level ? level.rarity : 1);
+  if (!state.numberTypes.natural) return randChoice(types);
+  const specialsActive = [];
+  if (state.numberTypes.negative) specialsActive.push('negative');
+  if (state.numberTypes.fraction) specialsActive.push('fraction');
+  if (specialsActive.length === 0) return 'natural';
+  if (Math.random() < specialChance) return randChoice(specialsActive);
+  return 'natural';
+}
+function makeOperand(level, forcedType = null) {
+  const type = forcedType || pickNumberType(level);
+  if (type === 'natural') { const n = randInt(1, level.maxNum); return { value: n, type, num: n, den: 1 }; }
+  if (type === 'negative') {
+    const maxAbs = Math.min(level.maxNum, 5 + level.rarity * 3);
+    const abs = randInt(1, maxAbs);
+    const sign = Math.random() < 0.75 ? -1 : 1;
+    const n = sign * abs;
+    return { value: n, type: 'negative', num: n, den: 1 };
+  }
+  const denChoices = level.rarity <= 3 ? [2, 3, 4] : (level.rarity <= 6 ? [2, 3, 4, 5, 6] : [2, 3, 4, 5, 6, 8]);
+  const den = randChoice(denChoices);
+  let num = randInt(1, den * 2);
+  if (num % den === 0) num += 1;
+  if (state.numberTypes.negative && Math.random() < 0.25) num = -num;
+  const s = simplify(num, den);
+  return { value: s.num / s.den, type: 'fraction', num: s.num, den: s.den };
+}
+function operandHTML(o) {
+  if (o.type === 'fraction') {
+    if (o.num < 0) return `(−${fracHTML(Math.abs(o.num), o.den)})`;
+    return fracHTML(o.num, o.den);
+  }
+  if (o.value < 0) return `(−${Math.abs(o.value)})`;
+  return String(o.value);
+}
+
+const FRAC_DIFF_PAIRS = [
+  [2, 4], [3, 6], [2, 6], [2, 3], [3, 4], [2, 5], [4, 6], [3, 5]
+];
+
+function makeDifferentDenFractions(op) {
+  for (let attempt = 0; attempt < 8; attempt++) {
+    const [d1, d2] = randChoice(FRAC_DIFF_PAIRS);
+    const n1 = randInt(1, d1 - 1);
+    const n2 = randInt(1, d2 - 1);
+    const f1 = simplify(n1, d1);
+    const f2 = simplify(n2, d2);
+    if (f1.den === 1 || f2.den === 1) continue;
+    if (op === '-') {
+      const v1 = f1.num / f1.den;
+      const v2 = f2.num / f2.den;
+      if (v1 < v2 || v1 === v2) continue;
+    }
+    const L = lcm(f1.den, f2.den);
+    const newNum1 = (L / f1.den) * f1.num;
+    const newNum2 = (L / f2.den) * f2.num;
+    let resultNum;
+    if (op === '+') resultNum = newNum1 + newNum2;
+    else resultNum = newNum1 - newNum2;
+    const resultFrac = simplify(resultNum, L);
+    if (resultFrac.den > 15) continue;
+    return {
+      o1: { value: f1.num/f1.den, type:'fraction', num: f1.num, den: f1.den },
+      o2: { value: f2.num/f2.den, type:'fraction', num: f2.num, den: f2.den },
+      answer: resultFrac.num / resultFrac.den,
+      den1: f1.den, den2: f2.den,
+      num1: f1.num, num2: f2.num,
+    };
+  }
+  return null;
+}
+
+function generateEquation(level) {
+  const op = level.ops[randInt(0, level.ops.length-1)];
+  let textHTML = '';
+  let answer = null;
+  let opA = null, opB = null;
+  const fractionActive = state.numberTypes.fraction;
+  const negativeActive = state.numberTypes.negative;
+
+  switch(op) {
+    case '+': {
+      if (fractionActive && Math.random() < getRarityChance(level.rarity) * 0.9) {
+        const useDiff = Math.random() < (negativeActive ? 0.3 : 0.55);
+        let made = null;
+        if (useDiff) made = makeDifferentDenFractions('+');
+        if (made) {
+          textHTML = `${operandHTML(made.o1)} + ${operandHTML(made.o2)}`;
+          answer = made.answer;
+          opA = made.o1.value; opB = made.o2.value;
+        } else {
+          const denChoices = level.rarity <= 3 ? [2, 3, 4] : [2, 3, 4, 5, 6, 8];
+          const den = randChoice(denChoices);
+          let n1 = randInt(1, den * 2), n2 = randInt(1, den * 2);
+          if (negativeActive) {
+            if (Math.random() < 0.25) n1 = -n1;
+            if (Math.random() < 0.25) n2 = -n2;
+          }
+          const o1 = { value: n1/den, type:'fraction', num: n1, den };
+          const o2 = { value: n2/den, type:'fraction', num: n2, den };
+          textHTML = `${operandHTML(o1)} + ${operandHTML(o2)}`;
+          answer = (n1 + n2) / den;
+          opA = n1/den; opB = n2/den;
+        }
+      } else {
+        const o1 = makeOperand(level);
+        const o2 = makeOperand(level);
+        textHTML = `${operandHTML(o1)} + ${operandHTML(o2)}`;
+        answer = o1.value + o2.value;
+        opA = o1.value; opB = o2.value;
+      }
+      break;
+    }
+    case '-': {
+      if (fractionActive && Math.random() < getRarityChance(level.rarity) * 0.9) {
+        const useDiff = Math.random() < (negativeActive ? 0.3 : 0.55);
+        let made = null;
+        if (useDiff) made = makeDifferentDenFractions('-');
+        if (made) {
+          textHTML = `${operandHTML(made.o1)} − ${operandHTML(made.o2)}`;
+          answer = made.answer;
+          opA = made.o1.value; opB = made.o2.value;
+        } else {
+          const denChoices = level.rarity <= 3 ? [2, 3, 4] : [2, 3, 4, 5, 6, 8];
+          const den = randChoice(denChoices);
+          let n1 = randInt(1, den * 2), n2 = randInt(1, den * 2);
+          if (!negativeActive && n1 < n2) { const t = n1; n1 = n2; n2 = t; }
+          if (negativeActive) {
+            if (Math.random() < 0.25) n1 = -n1;
+            if (Math.random() < 0.25) n2 = -n2;
+          }
+          const o1 = { value: n1/den, type:'fraction', num: n1, den };
+          const o2 = { value: n2/den, type:'fraction', num: n2, den };
+          textHTML = `${operandHTML(o1)} − ${operandHTML(o2)}`;
+          answer = (n1 - n2) / den;
+          opA = n1/den; opB = n2/den;
+        }
+      } else {
+        const o1 = makeOperand(level);
+        let o2 = makeOperand(level);
+        if (!negativeActive && o1.value < o2.value) {
+          const tmp = { ...o1 };
+          Object.assign(o1, o2); Object.assign(o2, tmp);
+        }
+        textHTML = `${operandHTML(o1)} − ${operandHTML(o2)}`;
+        answer = o1.value - o2.value;
+        opA = o1.value; opB = o2.value;
+      }
+      break;
+    }
+    case '×': {
+      if (fractionActive && Math.random() < getRarityChance(level.rarity) * 0.85) {
+        const denChoices = level.rarity <= 3 ? [2, 3] : [2, 3, 4, 5];
+        const den = randChoice(denChoices);
+        let num = randInt(1, 4);
+        let ent = randInt(2, Math.min(6, level.maxNum));
+        if (negativeActive) {
+          if (Math.random() < 0.25) num = -num;
+          if (Math.random() < 0.25) ent = -ent;
+        }
+        const o1 = { value: num/den, type:'fraction', num, den };
+        const o2 = { value: ent, type:'natural', num: ent, den: 1 };
+        textHTML = `${operandHTML(o1)} × ${operandHTML(o2)}`;
+        answer = (num * ent) / den;
+        opA = num/den; opB = ent;
+      } else {
+        const maxF = Math.min(12, level.maxNum);
+        let a = randInt(1, maxF), b = randInt(1, maxF);
+        if (negativeActive) {
+          const negChance = getRarityChance(level.rarity) * 0.7;
+          if (Math.random() < negChance) a = -a;
+          if (Math.random() < negChance) b = -b;
+        }
+        const o1 = { value: a, type: 'natural', num: a, den: 1 };
+        const o2 = { value: b, type: 'natural', num: b, den: 1 };
+        textHTML = `${operandHTML(o1)} × ${operandHTML(o2)}`;
+        answer = a * b;
+        opA = a; opB = b;
+      }
+      break;
+    }
+    case '÷': {
+      if (fractionActive && Math.random() < getRarityChance(level.rarity) * 0.85) {
+        const denChoices = level.rarity <= 3 ? [2, 3] : [2, 3, 4];
+        const den = randChoice(denChoices);
+        let num = randInt(1, 6);
+        const div = randInt(2, 4);
+        if (negativeActive && Math.random() < 0.25) num = -num;
+        const o1 = { value: num/den, type:'fraction', num, den };
+        const o2 = { value: div, type:'natural', num: div, den: 1 };
+        textHTML = `${operandHTML(o1)} ÷ ${operandHTML(o2)}`;
+        answer = num / (den * div);
+        opA = num/den; opB = div;
+      } else {
+        const maxF = Math.min(12, level.maxNum);
+        const b = randInt(2, maxF);
+        const q = randInt(2, maxF);
+        let a = b * q;
+        let sign = 1;
+        if (negativeActive && Math.random() < getRarityChance(level.rarity) * 0.7) sign = -1;
+        a = a * sign;
+        const o1 = { value: a, type:'natural', num: a, den: 1 };
+        const o2 = { value: b, type:'natural', num: b, den: 1 };
+        textHTML = `${operandHTML(o1)} ÷ ${operandHTML(o2)}`;
+        answer = sign * q;
+        opA = a; opB = b;
+      }
+      break;
+    }
+    case '√': {
+      const root = randInt(2, Math.min(15, level.maxNum));
+      const a = root * root;
+      textHTML = `√${a}`; answer = root;
+      opA = a; opB = null;
+      break;
+    }
+    case 'log': {
+      const exp = randInt(1, 4);
+      const a = Math.pow(10, exp);
+      textHTML = `log₁₀(${a})`; answer = exp;
+      opA = a; opB = null;
+      break;
+    }
+    default: {
+      const a = randInt(1, 10), b = randInt(1, 10);
+      textHTML = `${a} + ${b}`; answer = a + b;
+      opA = a; opB = b;
+    }
+  }
+
+  answer = Math.round(answer * 10000) / 10000;
+  const options = generateOptions(answer, level);
+  for (let i=options.length-1;i>0;i--) {
+    const j = Math.floor(Math.random()*(i+1));
+    [options[i],options[j]] = [options[j],options[i]];
+  }
+  return { textHTML, answer, options, op, opA, opB };
+}
+
+function generateOptions(answer, level) {
+  const options = [answer];
+  const wrongs = new Set();
+  const answerIsFrac = !Number.isInteger(answer);
+  let tries = 0;
+  while (wrongs.size < 6 && tries < 500) {
+    tries++;
+    let candidate;
+    if (answerIsFrac) {
+      const f = decimalToFraction(answer);
+      if (Math.random() < 0.6) {
+        const newNum = f.num + randChoice([-2,-1,1,2]);
+        candidate = newNum / f.den;
+      } else {
+        const newDen = Math.max(1, f.den + randChoice([-1,1,2]));
+        candidate = f.num / newDen;
+      }
+      if (Number.isInteger(candidate) && Math.random() < 0.7) continue;
+    } else {
+      const step = Math.max(1, Math.round(Math.abs(answer) * 0.2));
+      const offset = randChoice([-step, -Math.ceil(step/2), -1, 1, Math.ceil(step/2), step]);
+      candidate = answer + offset;
+      if (candidate === answer) candidate += 1;
+    }
+    candidate = Math.round(candidate * 10000) / 10000;
+    if (sameFraction(candidate, answer)) continue;
+    let duplicate = false;
+    for (const w of wrongs) { if (sameFraction(candidate, w)) { duplicate = true; break; } }
+    if (duplicate) continue;
+    wrongs.add(candidate);
+  }
+  wrongs.forEach(w => options.push(w));
+  return options;
+}
+
+/* ============================================================
+   EXPLICACIONES DIDÁCTICAS
+   ============================================================ */
+function generateExplanation(mistake) {
+  const { op, opA, opB, correctAnswer, chosenAnswer, type } = mistake;
+  const ansText = explainNum(correctAnswer);
+  const lines = [];
+
+  const isFracA = opA !== null && !Number.isInteger(opA);
+  const isFracB = opB !== null && !Number.isInteger(opB);
+  const hasFrac = isFracA || isFracB;
+  const hasNeg = (opA !== null && opA < 0) || (opB !== null && opB < 0);
+
+  switch(op) {
+    case '+': {
+      if (hasFrac) {
+        const fA = decimalToFraction(opA);
+        const fB = decimalToFraction(opB);
+        if (fA.den === fB.den) {
+          lines.push(`Cuando sumás fracciones con el <b>mismo denominador</b>, sumás los numeradores y mantenés el denominador.`);
+          lines.push(`<span class="tip">Numeradores: ${fA.num} + ${fB.num} = ${fA.num + fB.num} → mantenés el denominador ${fA.den}.</span>`);
+          lines.push(`Resultado: ${explainNum(opA)} + ${explainNum(opB)} = <b>${ansText}</b>`);
+        } else {
+          const L = lcm(fA.den, fB.den);
+          const newNumA = (L / fA.den) * fA.num;
+          const newNumB = (L / fB.den) * fB.num;
+          lines.push(`Cuando sumás fracciones con <b>distinto denominador</b>, primero hallás el <b>Mínimo Común Múltiplo (MCM)</b> de los denominadores.`);
+          lines.push(`<span class="step">Paso 1 — MCM:</span> MCM(${fA.den}, ${fB.den}) = <b>${L}</b>.`);
+          lines.push(`<span class="step">Paso 2 — Convertir:</span> ${fA.num}/${fA.den} = ${newNumA}/${L} y ${fB.num}/${fB.den} = ${newNumB}/${L}.`);
+          lines.push(`<span class="step">Paso 3 — Sumar numeradores:</span> ${newNumA} + ${newNumB} = ${newNumA + newNumB}.`);
+          lines.push(`Resultado: <b>${ansText}</b>`);
+        }
+      } else if (hasNeg) {
+        lines.push(`Recordá: <b>sumar un número negativo es como restar</b>. Por ejemplo, 5 + (−3) = 5 − 3 = 2.`);
+        lines.push(`${explainNum(opA)} + ${explainNum(opB)} = <b>${ansText}</b>`);
+      } else {
+        lines.push(`Sumamos ${opA} + ${opB}.`);
+        const b10 = Math.floor(opB / 10) * 10;
+        const bUnit = opB - b10;
+        if (b10 > 0 && bUnit > 0) lines.push(`<span class="tip">Tip: descomponé el segundo sumando. ${opA} + ${opB} = ${opA} + ${b10} + ${bUnit} = ${opA + b10} + ${bUnit} = <b>${ansText}</b></span>`);
+        else lines.push(`<span class="tip">Tip: podés redondear uno de los números a la decena más cercana y después ajustar.</span>`);
+        lines.push(`Resultado: <b>${ansText}</b>`);
+      }
+      break;
+    }
+    case '-': {
+      if (hasFrac) {
+        const fA = decimalToFraction(opA);
+        const fB = decimalToFraction(opB);
+        if (fA.den === fB.den) {
+          lines.push(`Con el <b>mismo denominador</b>, restás los numeradores y mantenés el denominador.`);
+          lines.push(`<span class="tip">Numeradores: ${fA.num} − ${fB.num} = ${fA.num - fB.num} → mantenés el denominador ${fA.den}.</span>`);
+          lines.push(`Resultado: ${explainNum(opA)} − ${explainNum(opB)} = <b>${ansText}</b>`);
+        } else {
+          const L = lcm(fA.den, fB.den);
+          const newNumA = (L / fA.den) * fA.num;
+          const newNumB = (L / fB.den) * fB.num;
+          lines.push(`Cuando restás fracciones con <b>distinto denominador</b>, primero hallás el <b>Mínimo Común Múltiplo (MCM)</b> de los denominadores.`);
+          lines.push(`<span class="step">Paso 1 — MCM:</span> MCM(${fA.den}, ${fB.den}) = <b>${L}</b>.`);
+          lines.push(`<span class="step">Paso 2 — Convertir:</span> ${fA.num}/${fA.den} = ${newNumA}/${L} y ${fB.num}/${fB.den} = ${newNumB}/${L}.`);
+          lines.push(`<span class="step">Paso 3 — Restar numeradores:</span> ${newNumA} − ${newNumB} = ${newNumA - newNumB}.`);
+          lines.push(`Resultado: <b>${ansText}</b>`);
+        }
+      } else if (hasNeg) {
+        lines.push(`Recordá: <b>restar un número negativo es como sumar</b>. Por ejemplo, 5 − (−3) = 5 + 3 = 8.`);
+        lines.push(`${explainNum(opA)} − ${explainNum(opB)} = <b>${ansText}</b>`);
+      } else {
+        lines.push(`Restamos ${opA} − ${opB}.`);
+        lines.push(`<span class="verify">Verificación: si ${ansText} + ${opB} = ${opA}, entonces la resta está bien.</span>`);
+        lines.push(`Resultado: <b>${ansText}</b>`);
+      }
+      break;
+    }
+    case '×': {
+      if (hasFrac) {
+        lines.push(`<b>Fracción × entero:</b> multiplicás el numerador por el entero y mantenés el denominador.`);
+        const fracOperand = isFracA ? opA : opB;
+        const intOperand = isFracA ? opB : opA;
+        const f = decimalToFraction(fracOperand);
+        lines.push(`<span class="tip">${f.num}/${f.den} × ${intOperand} = (${f.num} × ${intOperand}) / ${f.den} = <b>${ansText}</b></span>`);
+      } else if (hasNeg) {
+        lines.push(`<b>Regla de signos:</b> (−) × (+) = (−) y (−) × (−) = (+).`);
+        lines.push(`${explainNum(opA)} × ${explainNum(opB)} = <b>${ansText}</b>`);
+      } else {
+        const small = Math.min(opA, opB), big = Math.max(opA, opB);
+        lines.push(`Multiplicar ${opA} × ${opB} es como sumar ${small} veces el número ${big}.`);
+        if (small <= 12) lines.push(`<span class="tip">${big} repetido ${small} veces → <b>${ansText}</b></span>`);
+        else lines.push(`Resultado: <b>${ansText}</b>`);
+      }
+      break;
+    }
+    case '÷': {
+      if (hasFrac) {
+        lines.push(`<b>Fracción ÷ entero:</b> multiplicás el denominador por el entero (equivale a multiplicar la fracción por 1/entero).`);
+        const f = decimalToFraction(opA);
+        const ent = opB;
+        lines.push(`<span class="tip">${f.num}/${f.den} ÷ ${ent} = ${f.num}/(${f.den} × ${ent}) = <b>${ansText}</b></span>`);
+      } else if (hasNeg) {
+        lines.push(`<b>Regla de signos en la división:</b> (−) ÷ (+) = (−) y (−) ÷ (−) = (+).`);
+        lines.push(`${explainNum(opA)} ÷ ${explainNum(opB)} = <b>${ansText}</b>`);
+      } else {
+        lines.push(`División: <b>¿cuántas veces cabe ${opB} en ${opA}?</b>`);
+        lines.push(`<span class="verify">Verificación: ${ansText} × ${opB} = ${opA}.</span>`);
+        lines.push(`Resultado: <b>${ansText}</b>`);
+      }
+      break;
+    }
+    case '√': {
+      const root = correctAnswer;
+      lines.push(`La raíz cuadrada de ${opA} es el número que <b>multiplicado por sí mismo</b> da ${opA}.`);
+      lines.push(`<span class="tip">${root} × ${root} = ${opA}, entonces √${opA} = <b>${root}</b>.</span>`);
+      break;
+    }
+    case 'log': {
+      const exp = correctAnswer;
+      lines.push(`El logaritmo en base 10 nos dice <b>a qué exponente elevar 10</b> para obtener ${opA}.`);
+      lines.push(`<span class="tip">10<sup>${exp}</sup> = ${opA}, entonces log₁₀(${opA}) = <b>${exp}</b>.</span>`);
+      break;
+    }
+    default: lines.push(`Resultado correcto: <b>${ansText}</b>`);
+  }
+
+  if (type === 'wrongBall') {
+    if (sameFraction(chosenAnswer, correctAnswer)) {
+      lines.push(`⚠️ Hubo un problema al evaluar esta respuesta. ¡La respuesta era correcta!`);
+    } else {
+      lines.push(`❌ Atajaste <b>${explainNum(chosenAnswer)}</b>, pero la respuesta correcta era <b>${ansText}</b>.`);
+    }
+  } else if (type === 'missed') {
+    lines.push(`⚽ Dejaste pasar el balón correcto (<b>${ansText}</b>) y fue gol en contra.`);
+  }
+  return lines;
+}
+
+/* ============================================================
+   TARJETA ACADÉMICA
+   ============================================================ */
+function fillAcademicCard(selector, mistake) {
+  const card = document.querySelector(selector);
+  if (!card) return false;
+  card.classList.remove('hidden');
+  card.querySelector('[data-role="equation"]').innerHTML = mistake.textHTML + ' = ?';
+  card.querySelector('[data-role="correct"]').innerHTML = numHTML(mistake.correctAnswer);
+  const wrongEl = card.querySelector('[data-role="wrong"]');
+  if (mistake.type === 'wrongBall') {
+    wrongEl.innerHTML = numHTML(mistake.chosenAnswer);
+  } else {
+    wrongEl.innerHTML = '<span style="font-size:14px;font-weight:normal;opacity:0.9;">Dejaste pasar el correcto</span>';
+  }
+  const lines = generateExplanation(mistake);
+  card.querySelector('[data-role="explanation"]').innerHTML = lines.map(l => `<div>${l}</div>`).join('');
+  return true;
+}
+function hideAcademicCard(selector) {
+  const card = document.querySelector(selector);
+  if (card) card.classList.add('hidden');
+}
+function hideAllAcademicCards() {
+  document.querySelectorAll('.academic-card').forEach(c => c.classList.add('hidden'));
+}
+function showEndAcademicCard(overlayId) {
+  const selector = `#${overlayId} .academic-card`;
+  if (state.mistakes.length === 0) { hideAcademicCard(selector); return; }
+  const randomMistake = state.mistakes[Math.floor(Math.random() * state.mistakes.length)];
+  fillAcademicCard(selector, randomMistake);
+}
+
+/* ============================================================
+   UI REFS
+   ============================================================ */
+const container = document.getElementById('game-container');
+const uiEquation = document.getElementById('ui-equation');
+const uiLevel = document.getElementById('ui-level');
+const uiGoals = document.getElementById('ui-goals');
+const uiSaves = document.getElementById('ui-saves');
+const uiStreak = document.getElementById('ui-streak');
+const uiLives = document.getElementById('ui-lives');
+const uiLivesIcons = document.getElementById('ui-lives-icons');
+const uiKeeper = document.getElementById('ui-keeper');
+const uiKeeperEmoji = document.getElementById('ui-keeper-emoji');
+const uiTicker = document.getElementById('ui-ticker');
+const uiFeedback = document.getElementById('ui-feedback');
+const cursorDot = document.getElementById('cursor-dot');
+const controlsHint = document.getElementById('controls-hint');
+const btnExitGame = document.getElementById('btn-exit-game');
+const confirmExitModal = document.getElementById('confirm-exit-modal');
+const btnSoundToggle = document.getElementById('btn-sound-toggle');
+const btnVoiceToggle = document.getElementById('btn-voice-toggle');
+
+function updateUI() {
+  uiLevel.textContent = state.levelIndex + 1;
+  uiGoals.textContent = state.goals;
+  uiSaves.textContent = state.saves;
+  uiStreak.textContent = state.streak;
+  let hearts = '';
+  for (let i=0;i<state.maxLives;i++) hearts += i<state.lives ? '❤️' : '🖤';
+  uiLives.textContent = hearts;
+  uiLivesIcons.textContent = hearts;
+}
+function setTicker(t){ uiTicker.textContent = t; }
+function showFeedback(text, color) {
+  uiFeedback.textContent = text;
+  uiFeedback.style.color = color;
+  uiFeedback.classList.remove('hidden');
+  void uiFeedback.offsetWidth;
+  uiFeedback.style.animation = 'none';
+  void uiFeedback.offsetWidth;
+  uiFeedback.style.animation = 'feedbackPop 1s ease-out forwards';
+  setTimeout(()=>uiFeedback.classList.add('hidden'), 1000);
+}
+function showCorrectAnswerBig(value) {
+  const div = document.createElement('div');
+  div.className = 'correct-answer-big';
+  div.innerHTML = numHTML(value, { parentheses: false });
+  container.appendChild(div);
+  setTimeout(()=>div.remove(), 1900);
+}
+function syncSoundToggle() {
+  if (!btnSoundToggle) return;
+  btnSoundToggle.textContent = state.soundOn ? 'ON' : 'OFF';
+  btnSoundToggle.classList.toggle('toggle-off', !state.soundOn);
+}
+function syncVoiceToggle() {
+  if (!btnVoiceToggle) return;
+  btnVoiceToggle.textContent = state.voiceEnabled ? 'ON' : 'OFF';
+  btnVoiceToggle.classList.toggle('toggle-off', !state.voiceEnabled);
+}
+
+/* ============================================================
+   ÁREA Y LÍMITES
+   ============================================================ */
+function recalcArea() {
+  const rect = container.getBoundingClientRect();
+  const W = rect.width, H = rect.height;
+  state.area = { left: W * 0.10, right: W * 0.90, top: H * 0.48, bottom: H * 0.88 };
+  state.goalLineY = H * 0.78;
+  state.goalRect = { left: W * 0.30, right: W * 0.70, top: H * 0.60, bottom: H * 0.78 };
+  const kw = uiKeeper.offsetWidth || 60, kh = uiKeeper.offsetHeight || 60;
+  state.keeperW = kw; state.keeperH = kh;
+  state.keeperX = Math.max(state.area.left + kw/2, Math.min(state.area.right - kw/2, state.keeperX));
+  state.keeperY = Math.max(state.area.top + kh/2, Math.min(state.area.bottom - kh/2, state.keeperY));
+}
+function resetKeeperPosition() {
+  recalcArea();
+  const rect = container.getBoundingClientRect();
+  state.keeperX = rect.width / 2; state.keeperY = rect.height * 0.75;
+  renderKeeper();
+}
+function renderKeeper() {
+  uiKeeper.style.left = state.keeperX + 'px';
+  uiKeeper.style.top = state.keeperY + 'px';
+  uiKeeper.style.transform = 'translate(-50%, -50%)';
+}
+
+/* ============================================================
+   MOVIMIENTO
+   ============================================================ */
+function updateKeeper(dt) {
+  if (state.mode !== 'playing' || !state.active || state.gamePaused) return;
+  let dx = 0, dy = 0;
+  if (state.keys.left) dx -= 1;
+  if (state.keys.right) dx += 1;
+  if (state.keys.up) dy -= 1;
+  if (state.keys.down) dy += 1;
+  if (state.pointerActive && dx === 0 && dy === 0) {
+    const diffX = state.pointerX - state.keeperX;
+    const diffY = state.pointerY - state.keeperY;
+    const dist = Math.hypot(diffX, diffY);
+    if (dist > 6) { dx = diffX / dist; dy = diffY / dist; }
+  }
+  const mag = Math.hypot(dx, dy);
+  if (mag > 0) { dx /= mag; dy /= mag; }
+  state.keeperX += dx * state.keeperSpeedPx * dt;
+  state.keeperY += dy * state.keeperSpeedPx * dt;
+  const kw = state.keeperW / 2, kh = state.keeperH / 2;
+  state.keeperX = Math.max(state.area.left + kw, Math.min(state.area.right - kw, state.keeperX));
+  state.keeperY = Math.max(state.area.top + kh, Math.min(state.area.bottom - kh, state.keeperY));
+  renderKeeper();
+}
+
+/* ============================================================
+   BALONES
+   ============================================================ */
+function getValueClass(val) {
+  if (val < 0 && !Number.isInteger(val)) return 'ball-value negative fraction';
+  if (val < 0) return 'ball-value negative';
+  if (!Number.isInteger(val)) return 'ball-value fraction';
+  return 'ball-value';
+}
+function spawnBalls() {
+  state.balls.forEach(b => b.el.remove());
+  state.balls = [];
+  const level = LEVELS[state.levelIndex];
+  const eq = generateEquation(level);
+  state.currentEquation = eq;
+  state.correctAnswer = eq.answer;
+  uiEquation.innerHTML = eq.textHTML + ' = ?';
+
+  const numBalls = Math.min(level.balls, eq.options.length);
+  let picked = [...eq.options].sort(()=>Math.random()-0.5).slice(0, numBalls);
+  if (!picked.some(v => approxEqual(v, eq.answer))) {
+    picked[0] = eq.answer;
+    picked.sort(()=>Math.random()-0.5);
+  }
+  const rect = container.getBoundingClientRect();
+  const w = rect.width;
+  const colWidth = (w - 100) / picked.length;
+
+  picked.forEach((val, i) => {
+    const el = document.createElement('div');
+    el.className = 'ball';
+    el.innerHTML = `<span class="ball-emoji">${state.shooterAvatar}</span><span class="${getValueClass(val)}">${numHTML(val, { parentheses: false })}</span>`;
+    const colCenter = 50 + colWidth * i + colWidth/2;
+    const jitter = (Math.random() - 0.5) * colWidth * 0.3;
+    const startX = Math.max(20, Math.min(w - 70, colCenter + jitter - 25));
+    const startY = -90 - i * 90 - Math.random()*40;
+    el.style.left = startX + 'px'; el.style.top = startY + 'px';
+    container.appendChild(el);
+    const baseSpeed = 55 * level.speed * state.globalSpeedMultiplier;
+    state.balls.push({
+      el, value: val, x: startX, y: startY,
+      speed: baseSpeed * (0.85 + Math.random()*0.3),
+      isCorrect: approxEqual(val, eq.answer),
+      resolved: false,
+    });
+  });
+  state.active = true;
+  state.roundLocked = false;
+  controlsHint.classList.add('show');
+  setTimeout(()=>controlsHint.classList.remove('show'), 2500);
+  narrateShot();
+}
+
+/* ============================================================
+   COLISIONES
+   ============================================================ */
+function checkCollisions() {
+  if (!state.active || state.roundLocked || state.gamePaused) return;
+  const kx = state.keeperX, ky = state.keeperY;
+  const kw = state.keeperW * 0.85, kh = state.keeperH * 0.85;
+  state.balls.forEach(ball => {
+    if (ball.resolved) return;
+    const bw = ball.el.offsetWidth || 44, bh = ball.el.offsetHeight || 60;
+    const bx = ball.x + bw/2, by = ball.y + bh/2;
+    const dx = Math.abs(bx - kx) - (kw/2 + bw/2);
+    const dy = Math.abs(by - ky) - (kh/2 + bh/2);
+    if (dx < 0 && dy < 0) handleCollision(ball);
+  });
+}
+function handleCollision(ball) {
+  if (ball.resolved) return;
+  if (ball.isCorrect) {
+    ball.resolved = true;
+    ball.el.style.transition = 'all 0.3s';
+    ball.el.style.transform = 'scale(0.2)';
+    ball.el.style.opacity = '0';
+    setTimeout(()=>ball.el.remove(), 300);
+    state.saves++; state.streak++;
+    if (state.streak > state.bestStreak) state.bestStreak = state.streak;
+    soundSave(); soundCrowd();
+    showFeedback('¡ATAJADA! 🧤', '#4caf50');
+    setTicker(`¡Atajada! Racha: ${state.streak} 🔥`);
+    updateUI(); narrateSave();
+    uiKeeper.style.transform = 'translate(-50%, -50%) scale(1.4)';
+    setTimeout(()=>{ uiKeeper.style.transform = 'translate(-50%, -50%) scale(1)'; }, 200);
+    state.roundLocked = true;
+    if (state.saves >= LEVELS[state.levelIndex].target) {
+      state.active = false;
+      setTimeout(()=>levelComplete(), 700);
+      return;
+    }
+    setTimeout(()=>{ if (state.mode === 'playing') { state.lastTime = 0; spawnBalls(); } }, 900);
+  } else {
+    ball.resolved = true;
+    state.streak = 0;
+    soundGoal();
+    showFeedback('¡NO! ❌', '#e53935');
+    setTicker(`¡Ese no era! Era ${numText(state.correctAnswer)}.`);
+    updateUI();
+    if (state.currentEquation) {
+      state.mistakes.push({
+        op: state.currentEquation.op, opA: state.currentEquation.opA, opB: state.currentEquation.opB,
+        textHTML: state.currentEquation.textHTML, correctAnswer: state.correctAnswer,
+        chosenAnswer: ball.value, type: 'wrongBall',
+      });
+    }
+    narrateCategory('wrongBall', { rate: 1.1, pitch: 1.1 });
+    ball.el.style.transition = 'all 0.5s';
+    ball.el.style.opacity = '0.15';
+    ball.el.style.transform = 'scale(0.5)';
+    ball.el.style.filter = 'grayscale(1)';
+  }
+}
+
+/* ============================================================
+   GAME LOOP
+   ============================================================ */
+function gameLoop(timestamp) {
+  if (state.mode !== 'playing') return;
+  if (state.gamePaused) { state.lastTime = timestamp; state.animationId = requestAnimationFrame(gameLoop); return; }
+  const dt = state.lastTime ? Math.min((timestamp - state.lastTime)/1000, 0.05) : 0.016;
+  state.lastTime = timestamp;
+  updateKeeper(dt);
+  const goalY = state.goalLineY;
+  state.balls.forEach(ball => {
+    if (ball.resolved) return;
+    ball.y += ball.speed * dt;
+    ball.el.style.top = ball.y + 'px';
+    if (ball.isCorrect && ball.y > goalY && !ball.resolved) {
+      ball.resolved = true;
+      state.goals++; state.streak = 0; state.lives--;
+      soundGoal();
+      showFeedback('¡GOL! ⚽', '#e53935');
+      setTicker(`¡Gol en contra! Era ${numText(state.correctAnswer)}. Vidas: ${state.lives}`);
+      updateUI();
+      showCorrectAnswerBig(state.correctAnswer);
+      if (state.currentEquation) {
+        state.mistakes.push({
+          op: state.currentEquation.op, opA: state.currentEquation.opA, opB: state.currentEquation.opB,
+          textHTML: state.currentEquation.textHTML, correctAnswer: state.correctAnswer,
+          chosenAnswer: null, type: 'missed',
+        });
+      }
+      narrateCategory('goal', { rate: 1.2, pitch: 1.3 });
+      state.roundLocked = true;
+      state.active = false;
+      if (state.lives <= 0) setTimeout(()=>gameOver(), 1900);
+      else setTimeout(()=>{ if (state.mode === 'playing') { state.lastTime = 0; spawnBalls(); } }, 2100);
+    }
+    if (!ball.isCorrect && ball.y > goalY + 60 && !ball.resolved) {
+      ball.resolved = true;
+      ball.el.style.transition = 'all 0.3s';
+      ball.el.style.opacity = '0';
+      setTimeout(()=>ball.el.remove(), 300);
+    }
+  });
+  checkCollisions();
+  state.animationId = requestAnimationFrame(gameLoop);
+}
+
+/* ============================================================
+   FLUJO
+   ============================================================ */
+function startLevel(index) {
+  initAudio();
+  state.levelIndex = index;
+  state.mode = 'playing';
+  state.goals = 0; state.saves = 0; state.streak = 0; state.bestStreak = 0;
+  state.lives = LEVELS[index].lives;
+  state.maxLives = LEVELS[index].lives;
+  state.active = false; state.roundLocked = false;
+  state.lastTime = 0; state.pointerActive = false; state.gamePaused = false;
+  state.mistakes = [];
+
+  container.classList.add('playing');
+  uiEquation.textContent = '...';
+  updateUI();
+  hideAllOverlays();
+  hideAllAcademicCards();
+  confirmExitModal.classList.add('hidden');
+  btnExitGame.classList.remove('hidden');
+  soundWhistle();
+  narrateCategory('levelStart', { rate: 1.05, pitch: 1.2 });
+
+  const lvl = LEVELS[index];
+  const pct = Math.round(getRarityChance(lvl.rarity) * 100);
+  setTicker(`Nivel ${index+1}: ${lvl.name} - ¡Ataja ${lvl.target} balones! (Especiales: ${pct}%)`);
+  state.balls.forEach(b => b.el.remove());
+  state.balls = [];
+  uiKeeperEmoji.textContent = state.keeperAvatar;
+  recalcArea(); resetKeeperPosition();
+  setTimeout(()=>{
+    if (state.mode === 'playing') {
+      spawnBalls();
+      if (state.animationId) cancelAnimationFrame(state.animationId);
+      state.animationId = requestAnimationFrame(gameLoop);
+    }
+  }, 1200);
+}
+
+function exitToMenu() {
+  cancelSpeech();
+  state.mode = 'menu';
+  state.active = false; state.gamePaused = false; state.roundLocked = false;
+  container.classList.remove('playing');
+  if (state.animationId) cancelAnimationFrame(state.animationId);
+  state.balls.forEach(b => b.el.remove());
+  state.balls = [];
+  confirmExitModal.classList.add('hidden');
+  btnExitGame.classList.add('hidden');
+  cursorDot.style.display = 'none';
+  hideAllAcademicCards();
+  showOverlay('overlay-menu');
+  setTicker('Bienvenidos al Estadio Matemático. ¡Elige un modo!');
+  soundWhistle();
+}
+
+function levelComplete() {
+  state.mode = 'levelup';
+  state.active = false;
+  container.classList.remove('playing');
+  btnExitGame.classList.add('hidden');
+  soundLevelUp(); soundCrowd();
+  setTicker(`¡Nivel ${state.levelIndex+1} superado! 🏆`);
+  narrateCategory('levelComplete', { rate: 1.1, pitch: 1.25 });
+
+  const isLast = state.levelIndex >= LEVELS.length - 1;
+  if (state.isTournament && isLast) { gameOver(true); return; }
+  document.getElementById('lu-title').textContent = isLast ? '¡CAMPEÓN! 🏆' : '¡NIVEL SUPERADO! ✅';
+  document.getElementById('lu-subtitle').textContent =
+    `Atajadas: ${state.saves} | Goles: ${state.goals} | Racha máx: ${state.bestStreak}`;
+
+  showEndAcademicCard('overlay-levelup');
+
+  const btnNext = document.getElementById('btn-next-level');
+  if (isLast && !state.isTournament) {
+    btnNext.textContent = '🏆 JUGAR DE NUEVO';
+    btnNext.onclick = () => { soundClick(); state.isTournament=false; startLevel(0); };
+  } else if (state.isTournament) {
+    btnNext.textContent = '➡️ SIGUIENTE NIVEL';
+    btnNext.onclick = () => { soundClick(); state.isTournament=true; startLevel(state.levelIndex+1); };
+  } else {
+    btnNext.textContent = '➡️ SIGUIENTE NIVEL';
+    btnNext.onclick = () => { soundClick(); state.isTournament=false; startLevel(state.levelIndex+1); };
+  }
+  showOverlay('overlay-levelup');
+}
+
+function gameOver(tournamentWin = false) {
+  state.mode = 'gameover';
+  state.active = false;
+  container.classList.remove('playing');
+  btnExitGame.classList.add('hidden');
+  cursorDot.style.display = 'none';
+  if (state.animationId) cancelAnimationFrame(state.animationId);
+  soundWhistle();
+  setTimeout(soundGoal, 300);
+  setTimeout(() => {
+    if (tournamentWin) narrateCategory('tournamentWin', { rate: 1.1, pitch: 1.3 });
+    else narrateCategory('gameOver', { rate: 1.0, pitch: 1.1 });
+  }, 600);
+
+  document.getElementById('go-title').textContent = tournamentWin ? '¡TORNEO GANADO! 🏆' : '¡GOL EN CONTRA! 😢';
+  document.getElementById('go-subtitle').textContent = tournamentWin
+    ? '¡Has conquistado todos los niveles! Eres una leyenda.'
+    : `El arquero no pudo atajar. Racha máxima: ${state.bestStreak}`;
+  document.getElementById('go-goals').textContent = state.goals;
+  document.getElementById('go-saves').textContent = state.saves;
+  document.getElementById('go-streak').textContent = state.bestStreak;
+
+  showEndAcademicCard('overlay-gameover');
+
+  showOverlay('overlay-gameover');
+  setTicker('Fin del partido. ¡Presiona reintentar!');
+}
+
+function hideAllOverlays() { document.querySelectorAll('.overlay').forEach(o => o.classList.add('hidden')); }
+function showOverlay(id) { hideAllOverlays(); document.getElementById(id).classList.remove('hidden'); }
+
+/* ============================================================
+   OVERLAYS
+   ============================================================ */
+function buildLevelGrid() {
+  const grid = document.getElementById('level-grid');
+  grid.innerHTML = '';
+  LEVELS.forEach((lv,i) => {
+    const btn = document.createElement('button');
+    btn.className = 'level-btn';
+    btn.innerHTML = `<span class="lv-num">Nivel ${lv.id}</span><span class="lv-desc">${lv.name}</span><span class="lv-desc">${lv.desc}</span><span class="lv-rarity">${getRarityLabel(lv.rarity)}</span>`;
+    btn.onclick = () => { soundClick(); state.isTournament=false; startLevel(i); };
+    grid.appendChild(btn);
+  });
+}
+function buildAvatarPickers() {
+  const kDiv = document.getElementById('keeper-avatars');
+  const sDiv = document.getElementById('shooter-avatars');
+  kDiv.innerHTML = ''; sDiv.innerHTML = '';
+  KEEPER_AVATARS.forEach(a => {
+    const el = document.createElement('span');
+    el.className = 'avatar-option' + (state.keeperAvatar === a ? ' selected' : '');
+    el.textContent = a;
+    el.onclick = () => { soundClick(); state.keeperAvatar = a; uiKeeperEmoji.textContent = a; buildAvatarPickers(); };
+    kDiv.appendChild(el);
+  });
+  SHOOTER_AVATARS.forEach(a => {
+    const el = document.createElement('span');
+    el.className = 'avatar-option' + (state.shooterAvatar === a ? ' selected' : '');
+    el.textContent = a;
+    el.onclick = () => { soundClick(); state.shooterAvatar = a; buildAvatarPickers(); };
+    sDiv.appendChild(el);
+  });
+}
+function buildNumberTypeToggles() {
+  const group = document.getElementById('number-type-toggles');
+  group.querySelectorAll('.toggle-btn').forEach(btn => {
+    const type = btn.dataset.type;
+    btn.classList.toggle('active', state.numberTypes[type]);
+    btn.onclick = () => {
+      soundClick();
+      const activeCount = Object.values(state.numberTypes).filter(v => v).length;
+      if (state.numberTypes[type] && activeCount <= 1) return;
+      state.numberTypes[type] = !state.numberTypes[type];
+      btn.classList.toggle('active', state.numberTypes[type]);
+    };
+  });
+}
+function setupSettingsTabs() {
+  const tabs = document.querySelectorAll('.settings-tab');
+  const panels = document.querySelectorAll('.settings-panel');
+  tabs.forEach(tab => {
+    onTap(tab, function() {
+      soundClick();
+      const targetId = this.dataset.tab;
+      tabs.forEach(t => t.classList.remove('active'));
+      panels.forEach(p => p.classList.remove('active'));
+      this.classList.add('active');
+      const target = document.getElementById(targetId);
+      if (target) target.classList.add('active');
+      const overlay = document.getElementById('overlay-settings');
+      if (overlay) overlay.scrollTop = 0;
+    });
+  });
+}
+
+/* ============================================================
+   CONTROLES
+   ============================================================ */
+window.addEventListener('keydown', (e) => {
+  if (state.mode !== 'playing') return;
+  if (e.key === 'ArrowLeft' || e.key === 'a' || e.key === 'A') state.keys.left = true;
+  if (e.key === 'ArrowRight' || e.key === 'd' || e.key === 'D') state.keys.right = true;
+  if (e.key === 'ArrowUp' || e.key === 'w' || e.key === 'W') state.keys.up = true;
+  if (e.key === 'ArrowDown' || e.key === 's' || e.key === 'S') state.keys.down = true;
+  if (e.key === 'Escape') {
+    if (!confirmExitModal.classList.contains('hidden')) { confirmExitModal.classList.add('hidden'); state.gamePaused = false; }
+    else if (state.mode === 'playing') { confirmExitModal.classList.remove('hidden'); state.gamePaused = true; }
+  }
+});
+window.addEventListener('keyup', (e) => {
+  if (e.key === 'ArrowLeft' || e.key === 'a' || e.key === 'A') state.keys.left = false;
+  if (e.key === 'ArrowRight' || e.key === 'd' || e.key === 'D') state.keys.right = false;
+  if (e.key === 'ArrowUp' || e.key === 'w' || e.key === 'W') state.keys.up = false;
+  if (e.key === 'ArrowDown' || e.key === 's' || e.key === 'S') state.keys.down = false;
+});
+
+function getPointerPos(e) { const rect = container.getBoundingClientRect(); return { x: e.clientX - rect.left, y: e.clientY - rect.top }; }
+function updatePointer(e) {
+  if (state.mode !== 'playing' || state.gamePaused) return;
+  const p = getPointerPos(e);
+  state.pointerX = p.x; state.pointerY = p.y; state.pointerActive = true;
+  cursorDot.style.display = 'block';
+  cursorDot.style.left = p.x + 'px'; cursorDot.style.top = p.y + 'px';
+}
+container.addEventListener('pointermove', (e) => { if (state.mode !== 'playing') return; updatePointer(e); });
+container.addEventListener('pointerdown', (e) => {
+  initAudio();
+  if (state.mode !== 'playing') return;
+  if (!confirmExitModal.classList.contains('hidden')) return;
+  updatePointer(e);
+});
+container.addEventListener('pointerleave', () => { state.pointerActive = false; cursorDot.style.display = 'none'; });
+container.addEventListener('pointerup', () => { setTimeout(()=>{ state.pointerActive = false; }, 250); });
+container.addEventListener('touchstart', (e) => {
+  initAudio();
+  if (state.mode !== 'playing') return;
+  if (!confirmExitModal.classList.contains('hidden')) return;
+  e.preventDefault();
+  const t = e.touches[0];
+  updatePointer({ clientX: t.clientX, clientY: t.clientY });
+}, { passive: false });
+container.addEventListener('touchmove', (e) => {
+  if (state.mode !== 'playing' || state.gamePaused) return;
+  e.preventDefault();
+  const t = e.touches[0];
+  updatePointer({ clientX: t.clientX, clientY: t.clientY });
+}, { passive: false });
+container.addEventListener('touchend', () => { cursorDot.style.display = 'none'; setTimeout(()=>{ state.pointerActive = false; }, 250); });
+
+function onTap(el, handler) {
+  if (!el) return;
+  let touched = false;
+  el.addEventListener('touchend', (e) => {
+    touched = true;
+    e.preventDefault(); e.stopPropagation();
+    handler.call(el, e);
+    setTimeout(() => { touched = false; }, 400);
+  }, { passive: false });
+  el.addEventListener('click', (e) => {
+    if (touched) return;
+    e.stopPropagation();
+    handler.call(el, e);
+  });
+}
+
+onTap(document.getElementById('btn-tournament'), () => { initAudio(); soundClick(); state.isTournament = true; startLevel(0); });
+onTap(document.getElementById('btn-levels'), () => { soundClick(); buildLevelGrid(); showOverlay('overlay-levels'); });
+onTap(document.getElementById('btn-settings'), () => {
+  soundClick(); buildAvatarPickers(); buildNumberTypeToggles();
+  updateVoiceSelector(); syncSoundToggle(); syncVoiceToggle(); updateVoiceStatus('');
+  const tabs = document.querySelectorAll('.settings-tab');
+  const panels = document.querySelectorAll('.settings-panel');
+  tabs.forEach((t, i) => { t.classList.toggle('active', i === 0); });
+  panels.forEach((p, i) => { p.classList.toggle('active', i === 0); });
+  showOverlay('overlay-settings');
+  const overlay = document.getElementById('overlay-settings');
+  if (overlay) overlay.scrollTop = 0;
+});
+onTap(document.getElementById('btn-back-levels'), () => { soundClick(); showOverlay('overlay-menu'); });
+onTap(document.getElementById('btn-back-settings'), () => { soundClick(); showOverlay('overlay-menu'); });
+onTap(btnSoundToggle, function() { state.soundOn = !state.soundOn; syncSoundToggle(); soundClick(); });
+onTap(btnVoiceToggle, function() {
+  state.voiceEnabled = !state.voiceEnabled;
+  syncVoiceToggle(); soundClick();
+  if (state.voiceEnabled) speakDirect('Narración activada', { rate: 1.05, pitch: 1.15 });
+  else { cancelSpeech(); updateVoiceStatus('Narración desactivada'); }
+});
+onTap(document.getElementById('btn-voice-test'), () => {
+  soundClick();
+  speakDirect('¡Se prepara... y patea! ¡Gooool!', { rate: 1.15, pitch: 1.3, force: true });
+});
+onTap(document.getElementById('btn-retry'), () => { soundClick(); state.isTournament=false; startLevel(state.levelIndex); });
+onTap(document.getElementById('btn-menu-go'), () => {
+  soundClick(); cancelSpeech(); state.mode='menu'; container.classList.remove('playing'); showOverlay('overlay-menu');
+  setTicker('Bienvenidos al Estadio Matemático.');
+});
+onTap(document.getElementById('btn-menu-lu'), () => {
+  soundClick(); cancelSpeech(); state.mode='menu'; container.classList.remove('playing'); showOverlay('overlay-menu');
+  setTicker('Bienvenidos al Estadio Matemático.');
+});
+onTap(btnExitGame, () => { soundClick(); state.gamePaused = true; confirmExitModal.classList.remove('hidden'); });
+onTap(document.getElementById('btn-confirm-cancel'), () => {
+  soundClick(); confirmExitModal.classList.add('hidden'); state.gamePaused = false; state.lastTime = 0;
+});
+onTap(document.getElementById('btn-confirm-exit'), () => { soundClick(); exitToMenu(); });
+
+const voiceSelect = document.getElementById('voice-select');
+voiceSelect.addEventListener('change', (e) => {
+  state.selectedVoiceName = e.target.value;
+  soundClick();
+  if (state.voiceEnabled) speakDirect('Voz seleccionada', { rate: 1.05, pitch: 1.15 });
+});
+
+const speedSlider = document.getElementById('speed-slider');
+const speedValue = document.getElementById('speed-value');
+speedSlider.addEventListener('input', (e) => {
+  state.globalSpeedMultiplier = parseFloat(e.target.value);
+  speedValue.textContent = state.globalSpeedMultiplier.toFixed(1) + 'x';
+});
+
+/* ============================================================
+   INICIALIZACIÓN
+   ============================================================ */
+updateUI();
+setTicker('Bienvenidos al Estadio Matemático. ¡Elige un modo!');
+buildLevelGrid();
+uiKeeperEmoji.textContent = state.keeperAvatar;
+syncSoundToggle(); syncVoiceToggle();
+initVoices();
+setupSettingsTabs();
+
+window.addEventListener('resize', () => {
+  recalcArea();
+  if (state.mode === 'playing') {
+    const kw = state.keeperW/2, kh = state.keeperH/2;
+    state.keeperX = Math.max(state.area.left + kw, Math.min(state.area.right - kw, state.keeperX));
+    state.keeperY = Math.max(state.area.top + kh, Math.min(state.area.bottom - kh, state.keeperY));
+    renderKeeper();
+  }
+});
+setTimeout(() => { recalcArea(); resetKeeperPosition(); }, 100);
+
+function globalFirstInteraction() { initAudio(); }
+document.addEventListener('touchstart', globalFirstInteraction, { once: true, passive: true });
+document.addEventListener('click', globalFirstInteraction, { once: true });
+</script>
+</body>
+</html>
     --rojo: #e53935;
     --sombra: 0 4px 12px rgba(0,0,0,0.4);
   }
