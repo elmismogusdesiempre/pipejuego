@@ -14,11 +14,16 @@
     --sombra: 0 4px 12px rgba(0,0,0,0.4);
   }
   * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
-  html, body { overflow: hidden; touch-action: none; overscroll-behavior: none; }
+  html, body {
+    overflow: hidden;
+    touch-action: manipulation;
+    overscroll-behavior: none;
+  }
   body {
     font-family: 'Segoe UI', 'Arial Black', sans-serif;
     background: linear-gradient(180deg, #0d1b2a 0%, #1b263b 50%, #2e7d32 100%);
     height: 100vh;
+    height: 100dvh;
     display: flex;
     justify-content: center;
     align-items: center;
@@ -29,15 +34,21 @@
     position: relative;
     width: 100vw;
     height: 100vh;
+    height: 100dvh;
     max-width: 900px;
     max-height: 700px;
     background: var(--verde-campo);
     border-radius: 12px;
     overflow: hidden;
     box-shadow: var(--sombra);
-    touch-action: none;
-    cursor: none;
+    touch-action: manipulation;
   }
+  /* cursor:none solo durante el juego */
+  #game-container.playing {
+    cursor: none;
+    touch-action: none;
+  }
+
   .pitch {
     position: absolute; inset: 0;
     background: repeating-linear-gradient(0deg, #2e7d32 0px, #2e7d32 40px, #388e3c 40px, #388e3c 80px);
@@ -93,6 +104,7 @@
     cursor: pointer; display: flex; align-items: center; justify-content: center;
     box-shadow: var(--sombra); transition: transform 0.15s, background 0.15s;
     padding: 0; line-height: 1;
+    touch-action: manipulation;
   }
   .btn-exit-game:hover { background: #ff5252; transform: scale(1.1); }
   .btn-exit-game:active { transform: scale(0.95); }
@@ -173,6 +185,8 @@
     display: flex; flex-direction: column; justify-content: center;
     align-items: center; z-index: 100; padding: 20px; text-align: center;
     color: #fff; gap: 10px; overflow-y: auto; cursor: default;
+    touch-action: pan-y;
+    -webkit-overflow-scrolling: touch;
   }
   .overlay.hidden { display: none; }
   .title {
@@ -186,6 +200,10 @@
     padding: 11px 26px; border-radius: 10px; font-size: 15px; font-weight: 900;
     cursor: pointer; transition: transform 0.15s, background 0.15s;
     box-shadow: var(--sombra); text-transform: uppercase; letter-spacing: 1px;
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
+    position: relative;
+    z-index: 1;
   }
   .btn:hover { transform: scale(1.05); background: #ffea00; }
   .btn:active { transform: scale(0.97); }
@@ -201,8 +219,11 @@
     padding: 10px; border-radius: 10px; cursor: pointer; font-weight: bold;
     transition: all 0.15s; display: flex; flex-direction: column;
     gap: 2px; font-size: 12px;
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
   }
   .level-btn:hover { border-color: var(--amarillo); background: #37474f; }
+  .level-btn:active { transform: scale(0.97); }
   .level-btn .lv-num { font-size: 16px; color: var(--amarillo); }
   .level-btn .lv-desc { font-size: 10px; opacity: 0.8; }
   .level-btn .lv-rarity {
@@ -223,6 +244,8 @@
     border: 2px solid transparent; transition: all 0.15s;
     background: rgba(255,255,255,0.08);
     display: flex; align-items: center; justify-content: center;
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
   }
   .avatar-option:hover { background: rgba(255,255,255,0.2); }
   .avatar-option.selected {
@@ -238,6 +261,7 @@
     border-radius: 4px;
     background: linear-gradient(90deg, #4caf50 0%, #ffd600 50%, #e53935 100%);
     outline: none; cursor: pointer;
+    touch-action: manipulation;
   }
   input[type="range"]::-webkit-slider-thumb {
     -webkit-appearance: none; appearance: none; width: 22px; height: 22px;
@@ -260,11 +284,14 @@
     background: #455a64; color: #fff; border: 2px solid #546e7a;
     padding: 6px 14px; border-radius: 8px; font-size: 12px; font-weight: bold;
     cursor: pointer; transition: all 0.15s;
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
   }
   .toggle-btn.active {
     background: var(--amarillo); color: #1a1a2e; border-color: var(--amarillo);
   }
   .toggle-btn:hover { transform: scale(1.04); }
+  .toggle-btn:active { transform: scale(0.96); }
 
   .feedback {
     position: absolute; top: 50%; left: 50%;
@@ -371,6 +398,7 @@
     .avatar-option { font-size: 22px; }
     .btn-exit-game { width: 36px; height: 36px; font-size: 15px; }
     .stats-panel { right: 52px; }
+    .btn { padding: 12px 28px; font-size: 16px; }
   }
 </style>
 </head>
@@ -516,18 +544,6 @@
 const KEEPER_AVATARS = ['🧤','🤲','🙌','👐','🤜','✋','🖐️','👊','🦸','🧍','🏃','🦁','🐯','🐻','🦅','⚽','🥅','🧢','🎽','👤'];
 const SHOOTER_AVATARS = ['⚽','🔴','🟠','🟡','🟢','🔵','🟣','⚪','⚫','🇦🇷','🇧🇷','🇪🇸','🇲🇽','🇨🇴','🇺🇾','🇨🇱','🇵🇪','🇫🇷','🇩🇪','🇮🇹','🇬🇧','🇺🇸','🇯🇵','🇰🇷','🇳🇬','🇿🇦','🇦🇺','🇨🇦','🇵🇹','🏐','🏀'];
 
-/* ============================================================
-   SISTEMA DE RAREZA POR NIVEL
-   ------------------------------------------------------------
-   rarity: controla la probabilidad de que aparezcan números
-   no naturales (negativos y fracciones).
-   - Nivel 1 (rarity 1): 5% de probabilidad de negativos/fracciones
-   - Nivel 8 (rarity 8): 65% de probabilidad
-   La rareza escala linealmente entre niveles.
-   ============================================================ */
-const RARITY_PER_LEVEL = [1, 2, 3, 4, 5, 6, 7, 8];
-
-// Niveles con rarity asignada (rarity = índice+1 aprox)
 const LEVELS = [
   { id:1, name:'Principiante', desc:'Solo sumas y restas', ops:['+','-'], maxNum:10, speed:0.9, balls:3, target:5, lives:3, rarity:1 },
   { id:2, name:'Fácil', desc:'Sumas y restas', ops:['+','-'], maxNum:20, speed:1.1, balls:3, target:6, lives:3, rarity:2 },
@@ -539,20 +555,14 @@ const LEVELS = [
   { id:8, name:'Imposible', desc:'Velocidad máxima', ops:['+','-','×','÷','√','log'], maxNum:40, speed:2.6, balls:6, target:15, lives:2, rarity:8 },
 ];
 
-// Calcular la probabilidad de negativos y fracciones según rarity
-// rarity 1 → 5% | rarity 8 → 65%
 function getRarityChance(rarity) {
   const minChance = 0.05;
   const maxChance = 0.65;
-  const t = (rarity - 1) / 7; // normalizado 0..1
+  const t = (rarity - 1) / 7;
   return minChance + t * (maxChance - minChance);
 }
-
-// Devuelve un texto corto para mostrar la rareza en el botón de nivel
 function getRarityLabel(rarity) {
   const pct = Math.round(getRarityChance(rarity) * 100);
-  if (rarity <= 2) return `🎲 especiales: ${pct}%`;
-  if (rarity <= 5) return `🎲 especiales: ${pct}%`;
   return `🎲 especiales: ${pct}%`;
 }
 
@@ -587,7 +597,6 @@ const state = {
   active: false,
   roundLocked: false,
   globalSpeedMultiplier: 1.0,
-  // Por defecto los 3 tipos activos
   numberTypes: {
     natural: true,
     negative: true,
@@ -662,6 +671,10 @@ function initAudio() {
   if (!state.audioCtx) {
     try { state.audioCtx = new (window.AudioContext || window.webkitAudioContext)(); } catch(e) {}
   }
+  // En móvil, reanudar el contexto si está suspendido
+  if (state.audioCtx && state.audioCtx.state === 'suspended') {
+    state.audioCtx.resume().catch(()=>{});
+  }
 }
 function playTone(freq, dur, type='sine', vol=0.15) {
   if (!state.soundOn || !state.audioCtx) return;
@@ -699,13 +712,6 @@ function soundCrowd() {
 
 /* ============================================================
    GENERACIÓN CON RAREZA
-   ------------------------------------------------------------
-   El tipo de número se elige con probabilidades que dependen
-   de la rarity del nivel actual.
-   - Si los 3 tipos están activos:
-       * Naturales: el resto
-       * Especiales (negativos o fracciones): chance según rarity
-   - Si solo algunos tipos están activos, se respetan los toggles.
    ============================================================ */
 function pickNumberType(level) {
   const types = [];
@@ -713,27 +719,20 @@ function pickNumberType(level) {
   if (state.numberTypes.negative) types.push('negative');
   if (state.numberTypes.fraction) types.push('fraction');
   if (types.length === 0) return 'natural';
-
-  // Solo un tipo activo → siempre ese
   if (types.length === 1) return types[0];
 
   const rarity = level ? level.rarity : 1;
   const specialChance = getRarityChance(rarity);
 
-  // Si naturales NO está activo, elegir entre los especiales activos
   if (!state.numberTypes.natural) {
     return randChoice(types);
   }
 
-  // Determinar cuántos "especiales" están activos
   const specialsActive = [];
   if (state.numberTypes.negative) specialsActive.push('negative');
   if (state.numberTypes.fraction) specialsActive.push('fraction');
-
-  // Si no hay especiales activos, solo naturales
   if (specialsActive.length === 0) return 'natural';
 
-  // Tirar el dado: ¿sale especial?
   if (Math.random() < specialChance) {
     return randChoice(specialsActive);
   }
@@ -742,23 +741,17 @@ function pickNumberType(level) {
 
 function makeOperand(level, forcedType = null) {
   const type = forcedType || pickNumberType(level);
-
   if (type === 'natural') {
     const n = randInt(1, level.maxNum);
     return { value: n, type, num: n, den: 1 };
   }
-
   if (type === 'negative') {
-    // Rango de negativos escala con el nivel (más grandes en niveles altos)
     const maxAbs = Math.min(level.maxNum, 5 + level.rarity * 3);
     const abs = randInt(1, maxAbs);
-    const sign = Math.random() < 0.75 ? -1 : 1; // ligera preferencia a negativos reales
+    const sign = Math.random() < 0.75 ? -1 : 1;
     const n = sign * abs;
     return { value: n, type: 'negative', num: n, den: 1 };
   }
-
-  // fraction
-  // Denominadores escalan con rarity
   const denChoices = level.rarity <= 3 ? [2, 3, 4] : (level.rarity <= 6 ? [2, 3, 4, 5, 6] : [2, 3, 4, 5, 6, 8]);
   const den = randChoice(denChoices);
   let num = randInt(1, den * 2);
@@ -786,7 +779,6 @@ function generateEquation(level) {
 
   switch(op) {
     case '+': {
-      // Si fracciones activas, con probabilidad según rarity usarlas
       if (fractionActive && Math.random() < getRarityChance(level.rarity) * 0.9) {
         const denChoices = level.rarity <= 3 ? [2, 3, 4] : [2, 3, 4, 5, 6, 8];
         const den = randChoice(denChoices);
@@ -855,7 +847,6 @@ function generateEquation(level) {
         let a = randInt(1, maxF);
         let b = randInt(1, maxF);
         if (negativeActive) {
-          // Probabilidad de negativos según rarity
           const negChance = getRarityChance(level.rarity) * 0.7;
           if (Math.random() < negChance) a = -a;
           if (Math.random() < negChance) b = -b;
@@ -1250,6 +1241,9 @@ function startLevel(index) {
   state.pointerActive = false;
   state.gamePaused = false;
 
+  // Activar cursor:none y touch-action:none durante el juego
+  container.classList.add('playing');
+
   uiEquation.textContent = '...';
   updateUI();
   hideAllOverlays();
@@ -1278,11 +1272,14 @@ function exitToMenu() {
   state.active = false;
   state.gamePaused = false;
   state.roundLocked = false;
+  // Desactivar cursor:none al salir al menú
+  container.classList.remove('playing');
   if (state.animationId) cancelAnimationFrame(state.animationId);
   state.balls.forEach(b => b.el.remove());
   state.balls = [];
   confirmExitModal.classList.add('hidden');
   btnExitGame.classList.add('hidden');
+  cursorDot.style.display = 'none';
   showOverlay('overlay-menu');
   setTicker('Bienvenidos al Estadio Matemático. ¡Elige un modo!');
   soundWhistle();
@@ -1291,6 +1288,7 @@ function exitToMenu() {
 function levelComplete() {
   state.mode = 'levelup';
   state.active = false;
+  container.classList.remove('playing');
   btnExitGame.classList.add('hidden');
   soundLevelUp();
   soundCrowd();
@@ -1317,7 +1315,9 @@ function levelComplete() {
 function gameOver(tournamentWin = false) {
   state.mode = 'gameover';
   state.active = false;
+  container.classList.remove('playing');
   btnExitGame.classList.add('hidden');
+  cursorDot.style.display = 'none';
   if (state.animationId) cancelAnimationFrame(state.animationId);
   soundWhistle();
   setTimeout(soundGoal, 300);
@@ -1445,12 +1445,25 @@ function updatePointer(e) {
   cursorDot.style.left = p.x + 'px';
   cursorDot.style.top = p.y + 'px';
 }
-container.addEventListener('pointermove', updatePointer);
-container.addEventListener('pointerdown', (e) => {
-  initAudio();
-  if (!confirmExitModal.classList.contains('hidden')) return;
+
+// IMPORTANTE: Los listeners de pointer se registran SOLO en el container
+// pero se comprueba el estado 'playing' dentro. Los botones del menú tienen
+// su propio z-index y están por encima, y como el overlay no tiene pointer-events:none
+// los clicks funcionan. Además, sólo llamamos a preventDefault cuando estamos jugando.
+
+container.addEventListener('pointermove', (e) => {
+  if (state.mode !== 'playing') return;
   updatePointer(e);
 });
+
+container.addEventListener('pointerdown', (e) => {
+  initAudio();
+  if (state.mode !== 'playing') return;
+  if (!confirmExitModal.classList.contains('hidden')) return;
+  // NO llamamos a preventDefault para no bloquear clicks de botones
+  updatePointer(e);
+});
+
 container.addEventListener('pointerleave', () => {
   state.pointerActive = false;
   cursorDot.style.display = 'none';
@@ -1458,6 +1471,8 @@ container.addEventListener('pointerleave', () => {
 container.addEventListener('pointerup', () => {
   setTimeout(()=>{ state.pointerActive = false; }, 250);
 });
+
+// Touch: solo bloqueamos el comportamiento por defecto cuando estamos jugando
 container.addEventListener('touchstart', (e) => {
   initAudio();
   if (state.mode !== 'playing') return;
@@ -1466,12 +1481,14 @@ container.addEventListener('touchstart', (e) => {
   const t = e.touches[0];
   updatePointer({ clientX: t.clientX, clientY: t.clientY });
 }, { passive: false });
+
 container.addEventListener('touchmove', (e) => {
   if (state.mode !== 'playing' || state.gamePaused) return;
   e.preventDefault();
   const t = e.touches[0];
   updatePointer({ clientX: t.clientX, clientY: t.clientY });
 }, { passive: false });
+
 container.addEventListener('touchend', () => {
   cursorDot.style.display = 'none';
   setTimeout(()=>{ state.pointerActive = false; }, 250);
@@ -1480,54 +1497,69 @@ container.addEventListener('touchend', () => {
 /* ============================================================
    BOTONES
    ============================================================ */
-document.getElementById('btn-tournament').onclick = () => {
+// Función helper para registrar clicks/taps de forma robusta
+function onTap(el, handler) {
+  if (!el) return;
+  let touched = false;
+  el.addEventListener('touchend', (e) => {
+    touched = true;
+    e.preventDefault();
+    e.stopPropagation();
+    handler(e);
+    setTimeout(() => { touched = false; }, 400);
+  }, { passive: false });
+  el.addEventListener('click', (e) => {
+    if (touched) return;
+    e.stopPropagation();
+    handler(e);
+  });
+}
+
+onTap(document.getElementById('btn-tournament'), () => {
   initAudio(); soundClick();
   state.isTournament = true;
   startLevel(0);
-};
-document.getElementById('btn-levels').onclick = () => {
+});
+onTap(document.getElementById('btn-levels'), () => {
   soundClick(); buildLevelGrid(); showOverlay('overlay-levels');
-};
-document.getElementById('btn-settings').onclick = () => {
+});
+onTap(document.getElementById('btn-settings'), () => {
   soundClick(); buildAvatarPickers(); buildNumberTypeToggles(); showOverlay('overlay-settings');
-};
-document.getElementById('btn-back-levels').onclick = () => { soundClick(); showOverlay('overlay-menu'); };
-document.getElementById('btn-back-settings').onclick = () => { soundClick(); showOverlay('overlay-menu'); };
-document.getElementById('btn-sound-toggle').onclick = function() {
+});
+onTap(document.getElementById('btn-back-levels'), () => { soundClick(); showOverlay('overlay-menu'); });
+onTap(document.getElementById('btn-back-settings'), () => { soundClick(); showOverlay('overlay-menu'); });
+onTap(document.getElementById('btn-sound-toggle'), function() {
   state.soundOn = !state.soundOn;
   this.textContent = state.soundOn ? 'ON' : 'OFF';
   this.style.background = state.soundOn ? 'var(--amarillo)' : '#455a64';
   this.style.color = state.soundOn ? '#1a1a2e' : '#fff';
   soundClick();
-};
-document.getElementById('btn-retry').onclick = () => { soundClick(); state.isTournament=false; startLevel(state.levelIndex); };
-document.getElementById('btn-menu-go').onclick = () => {
-  soundClick(); state.mode='menu'; showOverlay('overlay-menu');
+});
+onTap(document.getElementById('btn-retry'), () => { soundClick(); state.isTournament=false; startLevel(state.levelIndex); });
+onTap(document.getElementById('btn-menu-go'), () => {
+  soundClick(); state.mode='menu'; container.classList.remove('playing'); showOverlay('overlay-menu');
   setTicker('Bienvenidos al Estadio Matemático.');
-};
-document.getElementById('btn-menu-lu').onclick = () => {
-  soundClick(); state.mode='menu'; showOverlay('overlay-menu');
+});
+onTap(document.getElementById('btn-menu-lu'), () => {
+  soundClick(); state.mode='menu'; container.classList.remove('playing'); showOverlay('overlay-menu');
   setTicker('Bienvenidos al Estadio Matemático.');
-};
+});
 
-btnExitGame.onclick = (e) => {
-  e.stopPropagation();
+onTap(btnExitGame, () => {
   soundClick();
   state.gamePaused = true;
   confirmExitModal.classList.remove('hidden');
-};
-document.getElementById('btn-confirm-cancel').onclick = (e) => {
-  e.stopPropagation();
+});
+onTap(document.getElementById('btn-confirm-cancel'), () => {
   soundClick();
   confirmExitModal.classList.add('hidden');
   state.gamePaused = false;
   state.lastTime = 0;
-};
-document.getElementById('btn-confirm-exit').onclick = (e) => {
-  e.stopPropagation();
+});
+onTap(document.getElementById('btn-confirm-exit'), () => {
   soundClick();
   exitToMenu();
-};
+});
 
 /* ============================================================
    SLIDER DE VELOCIDAD
@@ -1562,6 +1594,8 @@ setTimeout(() => {
   resetKeeperPosition();
 }, 100);
 
+// Primer click/tap: inicializar audio
+document.addEventListener('touchstart', () => initAudio(), { once: true, passive: true });
 document.addEventListener('click', () => initAudio(), { once: true });
 </script>
 </body>
